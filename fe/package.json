@@ -1,0 +1,47 @@
+{
+  "name": "fe",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@glidejs/glide": "^3.7.1",
+    "@tailwindcss/postcss": "^4.0.15",
+    "date-fns": "^4.1.0",
+    "firebase": "^11.5.0",
+    "framer-motion": "^12.6.2",
+    "i18next": "^24.2.3",
+    "i18next-browser-languagedetector": "^8.0.4",
+    "i18next-http-backend": "^3.0.2",
+    "lightningcss": "^1.29.3",
+    "lucide-react": "^0.483.0",
+    "next": "15.2.3",
+    "next-i18next": "^15.4.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-google-recaptcha": "^3.1.0",
+    "react-i18next": "^15.4.1",
+    "react-icons": "^5.5.0",
+    "react-intersection-observer": "^9.16.0",
+    "sweetalert2": "^11.17.2",
+    "swiper": "^11.2.6",
+    "tailwindcss": "^3.4.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/swiper": "^6.0.0",
+    "autoprefixer": "^10.4.21",
+    "browserslist": "^4.24.4",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.3",
+    "postcss": "^8.5.3",
+    "typescript": "^5"
+  }
+}
