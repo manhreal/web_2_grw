@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { getBanners } from '@/api/home-show/view';
 import { SERVER_URL } from '@/api/server_url';
@@ -12,6 +12,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
+// Type declarations
 export interface Banner {
     _id: string;
     image: string;
@@ -20,22 +21,23 @@ export interface Banner {
 }
 
 const BannerSlider: React.FC = () => {
+    // State declarations
     const { isDarkMode } = useTheme();
     const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState<boolean>(false);
 
-    // Theo dõi kích thước màn hình để điều chỉnh UI phù hợp
+    // Effect to track screen size for responsive UI adjustments
     useEffect(() => {
         const handleResize = () => {
             setIsMobile(window.innerWidth < 768);
         };
 
-        // Khởi tạo giá trị ban đầu
+        // Initialize value
         handleResize();
 
-        // Đăng ký event listener
+        // Register event listener
         window.addEventListener('resize', handleResize);
 
         // Cleanup
@@ -44,6 +46,7 @@ const BannerSlider: React.FC = () => {
         };
     }, []);
 
+    // Effect to fetch banner data
     useEffect(() => {
         const fetchBanners = async () => {
             try {
@@ -52,10 +55,10 @@ const BannerSlider: React.FC = () => {
                 if (response.success) {
                     setBanners(response.data);
                 } else {
-                    setError('Không thể tải dữ liệu banner');
+                    setError('Unable to load banner data');
                 }
             } catch (err) {
-                setError('Đã xảy ra lỗi khi tải dữ liệu banner');
+                setError('An error occurred while loading banner data');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -65,7 +68,7 @@ const BannerSlider: React.FC = () => {
         fetchBanners();
     }, []);
 
-    // Hàm xử lý URL ảnh
+    // Function to process image URL
     const getImageUrl = (imagePath: string): string => {
         if (imagePath.startsWith('http')) {
             return imagePath;
@@ -74,6 +77,98 @@ const BannerSlider: React.FC = () => {
         return `${SERVER_URL}/${decodedPath.replace(/^\//, '')}`;
     };
 
+    // Memoized styling for Swiper based on theme
+    const swiperStyles = useMemo(() => {
+        return `
+            .swiper {
+                width: 100%;
+                height: 100%;
+            }
+            
+            .swiper-pagination-bullet {
+                background: ${isDarkMode ? '#4b5563' : '#9ca3af'};
+                opacity: 0.6;
+                width: 6px;
+                height: 6px;
+            }
+            
+            @media (min-width: 768px) {
+                .swiper-pagination-bullet {
+                    width: 8px;
+                    height: 8px;
+                }
+            }
+            
+            @media (min-width: 1024px) {
+                .swiper-pagination-bullet {
+                    width: 10px;
+                    height: 10px;
+                }
+            }
+            
+            .swiper-pagination-bullet-active {
+                background: ${isDarkMode ? '#60a5fa' : '#3b82f6'};
+                opacity: 1;
+            }
+            
+            .swiper-button-next,
+            .swiper-button-prev {
+                color: ${isDarkMode ? '#60a5fa' : '#3b82f6'};
+                display: none;
+            }
+            
+            @media (min-width: 768px) {
+                .swiper-button-next,
+                .swiper-button-prev {
+                    display: flex;
+                    width: 30px;
+                    height: 30px;
+                }
+                
+                .swiper-button-next:after,
+                .swiper-button-prev:after {
+                    font-size: 16px;
+                }
+            }
+            
+            @media (min-width: 1024px) {
+                .swiper-button-next,
+                .swiper-button-prev {
+                    width: 40px;
+                    height: 40px;
+                }
+                
+                .swiper-button-next:after,
+                .swiper-button-prev:after {
+                    font-size: 20px;
+                }
+            }
+            
+            .text-shadow {
+                text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            }
+            
+            /* Use aspect ratio to ensure consistent image ratio */
+            .aspect-video {
+                aspect-ratio: 16/9;
+            }
+            
+            /* Reduce bullet size on mobile */
+            @media (max-width: 640px) {
+                .swiper-pagination {
+                    bottom: 5px !important;
+                }
+            }
+            
+            @media (min-width: 641px) and (max-width: 1023px) {
+                .swiper-pagination {
+                    bottom: 10px !important;
+                }
+            }
+        `;
+    }, [isDarkMode]);
+
+    // Function to render banner slider content
     const renderBannerSlide = () => {
         if (loading) {
             return (
@@ -109,7 +204,7 @@ const BannerSlider: React.FC = () => {
                     pagination={{
                         clickable: true,
                     }}
-                    navigation={!isMobile} // Tắt navigation trên mobile
+                    navigation={!isMobile} // Disable navigation on mobile
                     modules={[Autoplay, Pagination, Navigation]}
                     className="h-full"
                 >
@@ -117,7 +212,6 @@ const BannerSlider: React.FC = () => {
                         banners.map((banner) => (
                             <SwiperSlide key={banner._id} className="h-full">
                                 <div className="relative h-full w-full">
-
                                     <div className="relative w-full h-full">
                                         <Image
                                             src={getImageUrl(banner.image)}
@@ -136,7 +230,7 @@ const BannerSlider: React.FC = () => {
                     ) : (
                         <SwiperSlide className="h-full">
                             <div className={`flex justify-center items-center h-full ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
-                                <p className="text-sm sm:text-base md:text-lg font-medium">Không có banner nào hiện tại</p>
+                                <p className="text-sm sm:text-base md:text-lg font-medium">No banners available</p>
                             </div>
                         </SwiperSlide>
                     )}
@@ -145,6 +239,7 @@ const BannerSlider: React.FC = () => {
         );
     };
 
+    // Main component render
     return (
         <section className="w-full pt-2 pb-4 sm:pt-3 sm:pb-6 md:pt-4 md:pb-8 lg:pt-6 lg:pb-12">
             <div className="container mx-auto px-2 sm:px-4">
@@ -153,93 +248,7 @@ const BannerSlider: React.FC = () => {
                 </div>
             </div>
 
-            <style jsx global>{`
-                .swiper {
-                    width: 100%;
-                    height: 100%;
-                }
-                
-                .swiper-pagination-bullet {
-                    background: ${isDarkMode ? '#4b5563' : '#9ca3af'};
-                    opacity: 0.6;
-                    width: 6px;
-                    height: 6px;
-                }
-                
-                @media (min-width: 768px) {
-                    .swiper-pagination-bullet {
-                        width: 8px;
-                        height: 8px;
-                    }
-                }
-                
-                @media (min-width: 1024px) {
-                    .swiper-pagination-bullet {
-                        width: 10px;
-                        height: 10px;
-                    }
-                }
-                
-                .swiper-pagination-bullet-active {
-                    background: ${isDarkMode ? '#60a5fa' : '#3b82f6'};
-                    opacity: 1;
-                }
-                
-                .swiper-button-next,
-                .swiper-button-prev {
-                    color: ${isDarkMode ? '#60a5fa' : '#3b82f6'};
-                    display: none;
-                }
-                
-                @media (min-width: 768px) {
-                    .swiper-button-next,
-                    .swiper-button-prev {
-                        display: flex;
-                        width: 30px;
-                        height: 30px;
-                    }
-                    
-                    .swiper-button-next:after,
-                    .swiper-button-prev:after {
-                        font-size: 16px;
-                    }
-                }
-                
-                @media (min-width: 1024px) {
-                    .swiper-button-next,
-                    .swiper-button-prev {
-                        width: 40px;
-                        height: 40px;
-                    }
-                    
-                    .swiper-button-next:after,
-                    .swiper-button-prev:after {
-                        font-size: 20px;
-                    }
-                }
-                
-                .text-shadow {
-                    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-                }
-                
-                /* Sử dụng aspect ratio để đảm bảo tỉ lệ ảnh nhất quán */
-                .aspect-video {
-                    aspect-ratio: 16/9;
-                }
-                
-                /* Thu nhỏ bullets trên mobile */
-                @media (max-width: 640px) {
-                    .swiper-pagination {
-                        bottom: 5px !important;
-                    }
-                }
-                
-                @media (min-width: 641px) and (max-width: 1023px) {
-                    .swiper-pagination {
-                        bottom: 10px !important;
-                    }
-                }
-            `}</style>
+            <style jsx global>{swiperStyles}</style>
         </section>
     );
 };

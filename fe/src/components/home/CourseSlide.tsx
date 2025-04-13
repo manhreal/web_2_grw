@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getCourses } from '@/api/home-show/view';
@@ -7,6 +7,7 @@ import { SERVER_URL } from '@/api/server_url';
 import { useTheme } from '@/context/ThemeContext';
 import { BookOpen, Award, Users, ChevronRight, X } from 'lucide-react';
 
+// Type declarations
 export interface Course {
     _id: string;
     image: string;
@@ -21,6 +22,7 @@ interface CourseGroup {
 }
 
 const ModernCourseSection: React.FC = () => {
+    // State declarations
     const { isDarkMode } = useTheme();
     const [, setAllCourses] = useState<Course[]>([]);
     const [courseGroups, setCourseGroups] = useState<CourseGroup[]>([]);
@@ -29,7 +31,7 @@ const ModernCourseSection: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [visibleCourses, setVisibleCourses] = useState<Course[]>([]);
 
-    // --- Fetch và Organize Data ---
+    // --- Fetch and Organize Data ---
     useEffect(() => {
         const fetchCourses = async () => {
             try {
@@ -39,10 +41,10 @@ const ModernCourseSection: React.FC = () => {
                     setAllCourses(response.data);
                     organizeCoursesByCategory(response.data);
                 } else {
-                    setError('Không thể tải dữ liệu khóa học');
+                    setError('Unable to load course data');
                 }
             } catch (err) {
-                setError('Đã xảy ra lỗi khi tải dữ liệu');
+                setError('An error occurred while loading data');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -52,6 +54,7 @@ const ModernCourseSection: React.FC = () => {
         fetchCourses();
     }, []);
 
+    // Function to organize courses by category
     const organizeCoursesByCategory = (courses: Course[]) => {
         const ielts = courses.filter(course => course.title.toLowerCase().includes('ielts'));
         const toeic = courses.filter(course => course.title.toLowerCase().includes('toeic'));
@@ -68,7 +71,7 @@ const ModernCourseSection: React.FC = () => {
             groups.push({ name: 'TOEIC', courses: toeic });
         }
         if (others.length > 0) {
-            groups.push({ name: 'Liên quan', courses: others });
+            groups.push({ name: 'Related', courses: others });
         }
 
         setCourseGroups(groups);
@@ -76,7 +79,7 @@ const ModernCourseSection: React.FC = () => {
         setSelectedCategory(null);
     };
 
-    // --- Xử lý chọn Category ---
+    // --- Category Selection Handler ---
     const handleCategorySelect = (categoryName: string) => {
         if (selectedCategory === categoryName) {
             setSelectedCategory(null);
@@ -88,7 +91,7 @@ const ModernCourseSection: React.FC = () => {
         }
     };
 
-    // --- Helper lấy URL ảnh ---
+    // --- Helper function to get image URL ---
     const getImageUrl = (imagePath: string): string => {
         if (!imagePath) return '/images/placeholder.png';
         if (imagePath.startsWith('http')) {
@@ -102,86 +105,8 @@ const ModernCourseSection: React.FC = () => {
         }
     };
 
-    // --- Render States ---
-    if (loading) {
-        return (
-            <div className={`flex justify-center items-center min-h-[400px] ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-                <div className="flex flex-col items-center">
-                    <div className={`animate-spin rounded-full h-12 w-12 border-4 border-t-transparent ${isDarkMode ? 'border-blue-400' : 'border-blue-600'}`}></div>
-                    <p className={`mt-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Đang tải khóa học...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className={`flex flex-col items-center justify-center py-10 min-h-[400px] ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                <p className="text-red-500 font-medium">{error}</p>
-            </div>
-        );
-    }
-
-    // --- Animation Variants ---
-    const bannerVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } }
-    };
-
-    const textVariants = {
-        hidden: { opacity: 0, x: -20 },
-        visible: { opacity: 1, x: 0, transition: { duration: 0.7, delay: 0.2, ease: "easeOut" } }
-    };
-
-    const featureVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.4
-            }
-        }
-    };
-
-    const featureItemVariants = {
-        hidden: { opacity: 0, x: -10 },
-        visible: { opacity: 1, x: 0, transition: { duration: 0.5 } }
-    };
-
-    const buttonGroupVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.6
-            }
-        }
-    };
-
-    const buttonItemVariants = {
-        hidden: { opacity: 0, y: 10 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-    };
-
-    const courseGridVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2
-            }
-        }
-    };
-
-    const courseItemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } }
-    };
-
-    const getBadgeColor = (title: string) => {
+    // --- Badge color based on course title ---
+    const getBadgeColor = useMemo(() => (title: string) => {
         if (title.toLowerCase().includes('ielts')) {
             return isDarkMode
                 ? 'bg-gradient-to-r from-purple-600 to-purple-800 text-white'
@@ -195,91 +120,178 @@ const ModernCourseSection: React.FC = () => {
                 ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white'
                 : 'bg-gradient-to-r from-blue-500 to-blue-700 text-white';
         }
-    };
+    }, [isDarkMode]);
 
-    // --- Render Component ---
+    // --- Animation Variants ---
+    const animations = useMemo(() => ({
+        bannerVariants: {
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } }
+        },
+
+        textVariants: {
+            hidden: { opacity: 0, x: -20 },
+            visible: { opacity: 1, x: 0, transition: { duration: 0.7, delay: 0.2, ease: "easeOut" } }
+        },
+
+        featureVariants: {
+            hidden: { opacity: 0 },
+            visible: {
+                opacity: 1,
+                transition: {
+                    staggerChildren: 0.1,
+                    delayChildren: 0.4
+                }
+            }
+        },
+
+        featureItemVariants: {
+            hidden: { opacity: 0, x: -10 },
+            visible: { opacity: 1, x: 0, transition: { duration: 0.5 } }
+        },
+
+        buttonGroupVariants: {
+            hidden: { opacity: 0 },
+            visible: {
+                opacity: 1,
+                transition: {
+                    staggerChildren: 0.1,
+                    delayChildren: 0.6
+                }
+            }
+        },
+
+        buttonItemVariants: {
+            hidden: { opacity: 0, y: 10 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+        },
+
+        courseGridVariants: {
+            hidden: { opacity: 0 },
+            visible: {
+                opacity: 1,
+                transition: {
+                    staggerChildren: 0.1,
+                    delayChildren: 0.2
+                }
+            }
+        },
+
+        courseItemVariants: {
+            hidden: { y: 20, opacity: 0 },
+            visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } }
+        }
+    }), []);
+
+    // --- Render Loading State ---
+    if (loading) {
+        return (
+            <div className={`flex justify-center items-center min-h-[400px] ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+                <div className="flex flex-col items-center">
+                    <div className={`animate-spin rounded-full h-12 w-12 border-4 border-t-transparent ${isDarkMode ? 'border-blue-400' : 'border-blue-600'}`}></div>
+                    <p className={`mt-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading courses...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // --- Render Error State ---
+    if (error) {
+        return (
+            <div className={`flex flex-col items-center justify-center py-10 min-h-[400px] ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+                <p className="text-red-500 font-medium">{error}</p>
+            </div>
+        );
+    }
+
+    // --- Main Component Render ---
     return (
         <div className={`py-20 transition-colors duration-300 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
             <div className="container mx-auto px-4 sm:px-6">
+                {/* Banner Section */}
                 <motion.div
                     className="flex flex-col md:flex-row items-center rounded-md overflow-hidden shadow-xl"
                     initial="hidden"
                     animate="visible"
-                    variants={bannerVariants}
+                    variants={animations.bannerVariants}
                 >
-                    {/* Fixing the image aspect ratio with proper object-fit */}
+                    {/* Banner Image */}
                     <div className="w-full md:w-5/12 h-72 md:h-[480px] relative">
                         <Image
                             src="/images/review/t1.jpg"
-                            alt="Banner Khóa Học"
+                            alt="Course Banner"
                             fill
                             style={{ objectFit: 'cover' }}
                             sizes="(max-width: 768px) 100vw, 42vw"
                             priority
                         />
                     </div>
+
+                    {/* Banner Content */}
                     <motion.div
                         className="w-full md:w-7/12 p-6 md:p-12"
-                        variants={textVariants}
+                        variants={animations.textVariants}
                     >
-                        {/* Fixed title spacing and padding */}
                         <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-8 leading-tight py-2">
                             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                                NÂNG TẦM TIẾNG ANH !
+                                IMPROVE YOUR ENGLISH!
                             </span>
                         </h2>
 
                         <p className={`mb-8 text-base md:text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} max-w-xl leading-relaxed`}>
-                            Khám phá lộ trình học tập cá nhân hóa, hiệu quả với đội ngũ giáo viên chuyên môn cao
-                            và tài liệu học tập độc quyền được thiết kế riêng cho mọi trình độ.
+                            Discover personalized, effective learning paths with our highly qualified teachers
+                            and exclusive learning materials designed for all proficiency levels.
                         </p>
+
+                        {/* Feature List */}
                         <motion.div
                             className="space-y-4 mb-10"
-                            variants={featureVariants}
+                            variants={animations.featureVariants}
                             initial="hidden"
                             animate="visible"
                         >
                             <motion.div
                                 className="flex items-center gap-4"
-                                variants={featureItemVariants}
+                                variants={animations.featureItemVariants}
                             >
                                 <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-600/20' : 'bg-blue-100'}`}>
                                     <BookOpen size={20} className={isDarkMode ? "text-blue-400" : "text-blue-600"} />
                                 </div>
-                                <span className="font-medium">Phương pháp học hiện đại</span>
+                                <span className="font-medium">Modern learning methods</span>
                             </motion.div>
 
                             <motion.div
                                 className="flex items-center gap-4"
-                                variants={featureItemVariants}
+                                variants={animations.featureItemVariants}
                             >
                                 <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
                                     <Award size={20} className={isDarkMode ? "text-purple-400" : "text-purple-600"} />
                                 </div>
-                                <span className="font-medium">Cam kết đầu ra</span>
+                                <span className="font-medium">Guaranteed results</span>
                             </motion.div>
 
                             <motion.div
                                 className="flex items-center gap-4"
-                                variants={featureItemVariants}
+                                variants={animations.featureItemVariants}
                             >
                                 <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-green-600/20' : 'bg-green-100'}`}>
                                     <Users size={20} className={isDarkMode ? "text-green-400" : "text-green-600"} />
                                 </div>
-                                <span className="font-medium">Cộng đồng học viên năng động</span>
+                                <span className="font-medium">Dynamic student community</span>
                             </motion.div>
                         </motion.div>
-                        {/* Fixed button alignment */}
+
+                        {/* Category Buttons */}
                         <motion.div
                             className="flex flex-wrap justify-start gap-3 md:gap-4"
-                            variants={buttonGroupVariants}
+                            variants={animations.buttonGroupVariants}
                             initial="hidden"
                             animate="visible"
                         >
                             {courseGroups.map((group) => (
                                 <motion.button
                                     key={group.name}
-                                    variants={buttonItemVariants}
+                                    variants={animations.buttonItemVariants}
                                     onClick={() => handleCategorySelect(group.name)}
                                     className={`px-6 py-3 rounded-full text-sm md:text-base font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2
                                         ${selectedCategory === group.name
@@ -301,7 +313,7 @@ const ModernCourseSection: React.FC = () => {
                                 >
                                     {selectedCategory === group.name ? (
                                         <>
-                                            Đóng
+                                            Close
                                             <X size={16} />
                                         </>
                                     ) : (
@@ -312,6 +324,8 @@ const ModernCourseSection: React.FC = () => {
                         </motion.div>
                     </motion.div>
                 </motion.div>
+
+                {/* Category Header */}
                 <AnimatePresence mode="wait">
                     {selectedCategory && (
                         <motion.div
@@ -323,13 +337,15 @@ const ModernCourseSection: React.FC = () => {
                             className="text-center my-10"
                         >
                             <h3 className={`text-2xl md:text-3xl font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                                {selectedCategory === 'IELTS' && "Khóa học IELTS"}
-                                {selectedCategory === 'TOEIC' && "Khóa học TOEIC"}
-                                {selectedCategory === 'Liên quan' && "Các khóa học khác"}
+                                {selectedCategory === 'IELTS' && "IELTS Courses"}
+                                {selectedCategory === 'TOEIC' && "TOEIC Courses"}
+                                {selectedCategory === 'Related' && "Other Courses"}
                             </h3>
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* Course Grid */}
                 <AnimatePresence mode="wait">
                     {selectedCategory && visibleCourses.length > 0 && (
                         <motion.div
@@ -341,65 +357,66 @@ const ModernCourseSection: React.FC = () => {
                         >
                             <motion.div
                                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8"
-                                variants={courseGridVariants}
+                                variants={animations.courseGridVariants}
                                 initial="hidden"
                                 animate="visible"
                             >
-                                {visibleCourses.map((course) => {
-                                    return (
-                                        <motion.div
-                                            key={course._id}
-                                            variants={courseItemVariants}
-                                            className={`flex flex-col rounded-md overflow-hidden transition-all duration-300 group
-                                                ${isDarkMode
-                                                    ? 'bg-gray-800/80 shadow-lg shadow-blue-900/10 hover:shadow-blue-700/20'
-                                                    : 'bg-white shadow-md hover:shadow-xl'
-                                                }`}
-                                        >
-                                            {/* Fixed image aspect ratio */}
-                                            <div className="relative w-full pt-[75%] overflow-hidden">
-                                                <Image
-                                                    src={getImageUrl(course.image)}
-                                                    alt={course.title}
-                                                    fill
-                                                    style={{ objectFit: 'cover', objectPosition: 'center' }}
-                                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                                    className="brightness-95"
-                                                />
-                                                <div className="absolute top-3 right-3">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getBadgeColor(course.title)}`}>
-                                                        {course.title.toLowerCase().includes('ielts')
-                                                            ? 'IELTS'
-                                                            : course.title.toLowerCase().includes('toeic')
-                                                                ? 'TOEIC'
-                                                                : 'Tiếng Anh'}
-                                                    </span>
-                                                </div>
-                                                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent"></div>
+                                {visibleCourses.map((course) => (
+                                    <motion.div
+                                        key={course._id}
+                                        variants={animations.courseItemVariants}
+                                        className={`flex flex-col rounded-md overflow-hidden transition-all duration-300 group
+                                            ${isDarkMode
+                                                ? 'bg-gray-800/80 shadow-lg shadow-blue-900/10 hover:shadow-blue-700/20'
+                                                : 'bg-white shadow-md hover:shadow-xl'
+                                            }`}
+                                    >
+                                        {/* Course Image */}
+                                        <div className="relative w-full pt-[75%] overflow-hidden">
+                                            <Image
+                                                src={getImageUrl(course.image)}
+                                                alt={course.title}
+                                                fill
+                                                style={{ objectFit: 'cover', objectPosition: 'center' }}
+                                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                                className="brightness-95"
+                                            />
+                                            <div className="absolute top-3 right-3">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getBadgeColor(course.title)}`}>
+                                                    {course.title.toLowerCase().includes('ielts')
+                                                        ? 'IELTS'
+                                                        : course.title.toLowerCase().includes('toeic')
+                                                            ? 'TOEIC'
+                                                            : 'English'}
+                                                </span>
                                             </div>
+                                            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent"></div>
+                                        </div>
 
-                                            <div className="p-5 flex flex-col flex-grow">
-                                                <h4 className={`text-lg font-semibold mb-3 line-clamp-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                                                    KHÓA: {course.title}
-                                                </h4>
-                                                <div className="mt-auto text-right">
-                                                    <Link
-                                                        href={`/course/course-page?id=${course._id}`}
-                                                        className={`inline-flex items-center gap-1 cursor-pointer font-medium underline 
-                                                        ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
-                                                    >
-                                                        Xem chi tiết
-                                                        <ChevronRight size={16} />
-                                                    </Link>
-                                                </div>
+                                        {/* Course Details */}
+                                        <div className="p-5 flex flex-col flex-grow">
+                                            <h4 className={`text-lg font-semibold mb-3 line-clamp-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                                                COURSE: {course.title}
+                                            </h4>
+                                            <div className="mt-auto text-right">
+                                                <Link
+                                                    href={`/course/course-page?id=${course._id}`}
+                                                    className={`inline-flex items-center gap-1 cursor-pointer font-medium underline 
+                                                    ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                                                >
+                                                    View details
+                                                    <ChevronRight size={16} />
+                                                </Link>
                                             </div>
-                                        </motion.div>
-                                    );
-                                })}
+                                        </div>
+                                    </motion.div>
+                                ))}
                             </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* Empty State */}
                 <AnimatePresence>
                     {selectedCategory && visibleCourses.length === 0 && !loading && (
                         <motion.div
@@ -420,9 +437,9 @@ const ModernCourseSection: React.FC = () => {
                                     </svg>
                                 </div>
                                 <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                                    Chưa có khóa học
+                                    No courses available
                                 </h3>
-                                <p>Hiện chưa có khóa học nào trong danh mục &quot;{selectedCategory}&quot;. Vui lòng quay lại sau.</p>
+                                <p>There are currently no courses in the &quot;{selectedCategory}&quot; category. Please check back later.</p>
                             </div>
                         </motion.div>
                     )}

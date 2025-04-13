@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     getStudents,
     getPartners,
@@ -16,20 +16,30 @@ import NewsManager from '../../components/home-manager/NewsManager';
 import CourseManager from '../../components/home-manager/CourseManager';
 import TeacherManager from '@/components/home-manager/TeacherManager';
 import BannerManager from '@/components/home-manager/BannerManager';
-import { Student, Partner, News, Course, Teacher, Banner } from '../../components/home-manager/types';
 import AdminGuard from '@/components/AdminGuard';
 
+// Main component for managing home page content
 export default function HomeManager() {
-    // State for each data type
-    const [students, setStudents] = useState<Student[]>([]);
-    const [partners, setPartners] = useState<Partner[]>([]);
-    const [news, setNews] = useState<News[]>([]);
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [teachers, setTeachers] = useState<Teacher[]>([]);
-    const [banners, setBanners] = useState<Banner[]>([]);
+    // State declarations
+    const [students, setStudents] = useState([]);
+    const [partners, setPartners] = useState([]);
+    const [news, setNews] = useState([]);
+    const [courses, setCourses] = useState([]);
+    const [teachers, setTeachers] = useState([]);
+    const [banners, setBanners] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('students');
+
+    // Tab definitions for better maintainability
+    const tabs = [
+        { id: 'students', label: 'Students', icon: Users },
+        { id: 'partners', label: 'Partners', icon: Building },
+        { id: 'news', label: 'News', icon: Newspaper },
+        { id: 'courses', label: 'Courses', icon: Book },
+        { id: 'teachers', label: 'Teachers', icon: Users },
+        { id: 'banners', label: 'Banners', icon: Book }
+    ];
 
     // Load all data when the component mounts
     useEffect(() => {
@@ -51,118 +61,105 @@ export default function HomeManager() {
                 setCourses(coursesRes);
                 setTeachers(teachersRes);
                 setBanners(bannersRes);
-                setLoading(false);
             } catch (err) {
-                setError('Đã xảy ra lỗi khi tải dữ liệu');
-                setLoading(false);
+                setError('An error occurred while loading data');
                 console.error('Error fetching data:', err);
+                // Reset all data to empty arrays
                 setStudents([]);
                 setPartners([]);
                 setNews([]);
                 setCourses([]);
                 setTeachers([]);
                 setBanners([]);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchData();
     }, []);
 
+    // Tab change handler with memoization
+    const handleTabChange = useCallback((tabId) => {
+        setActiveTab(tabId);
+    }, []);
+
+    // Loading state render
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="mt-4">Đang tải dữ liệu...</p>
+                    <p className="mt-4">Loading data...</p>
                 </div>
             </div>
         );
     }
 
+    // Error state render
     if (error) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <div className="text-center text-red-500">
                     <AlertCircle size={48} className="mx-auto mb-4" />
                     <p>{error}</p>
-                    <button className="mt-4 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100" onClick={() => window.location.reload()}>
-                        Thử lại
+                    <button
+                        className="mt-4 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+                        onClick={() => window.location.reload()}
+                    >
+                        Try Again
                     </button>
                 </div>
             </div>
         );
     }
 
+    // Main render with tabs and content
     return (
         <AdminGuard>
-        <div className="container mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-8">Quản lý trang chủ</h1>
+            <div className="container mx-auto py-8 px-4">
+                <h1 className="text-3xl font-bold mb-8">Home Page Management</h1>
 
-            {/* Custom Tab Navigation */}
-            <div className="flex border-b mb-6">
-                <button
-                    className={`px-4 py-2 flex items-center ${activeTab === 'students' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('students')}
-                >
-                    <Users className="mr-2 h-4 w-4" /> Học viên
-                </button>
-                <button
-                    className={`px-4 py-2 flex items-center ${activeTab === 'partners' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('partners')}
-                >
-                    <Building className="mr-2 h-4 w-4" /> Đối tác
-                </button>
-                <button
-                    className={`px-4 py-2 flex items-center ${activeTab === 'news' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('news')}
-                >
-                    <Newspaper className="mr-2 h-4 w-4" /> Tin tức
-                </button>
-                <button
-                    className={`px-4 py-2 flex items-center ${activeTab === 'courses' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('courses')}
-                >
-                    <Book className="mr-2 h-4 w-4" /> Khóa học
-                </button>
-                <button
-                    className={`px-4 py-2 flex items-center ${activeTab === 'teachers' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('teachers')}
-                >
-                <Users className="mr-2 h-4 w-4" /> Giảng viên
-                </button>
-                <button
-                    className={`px-4 py-2 flex items-center ${activeTab === 'banners' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('banners')}
-                >
-                    <Book className="mr-2 h-4 w-4" /> Banner
-                    </button>
-                    
-            </div>
+                {/* Tab Navigation */}
+                <div className="flex border-b mb-6 overflow-x-auto">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            className={`px-4 py-2 flex items-center whitespace-nowrap ${activeTab === tab.id
+                                    ? 'text-blue-600 border-b-2 border-blue-600'
+                                    : 'text-gray-500'
+                                }`}
+                            onClick={() => handleTabChange(tab.id)}
+                        >
+                            <tab.icon className="mr-2 h-4 w-4" /> {tab.label}
+                        </button>
+                    ))}
+                </div>
 
-            {/* Render active tab content */}
-            {activeTab === 'students' && (
-                <StudentManager students={students} setStudents={setStudents} />
-            )}
+                {/* Content based on active tab */}
+                {activeTab === 'students' && (
+                    <StudentManager students={students} setStudents={setStudents} />
+                )}
 
-            {activeTab === 'partners' && (
-                <PartnerManager partners={partners} setPartners={setPartners} />
-            )}
+                {activeTab === 'partners' && (
+                    <PartnerManager partners={partners} setPartners={setPartners} />
+                )}
 
-            {activeTab === 'news' && (
-                <NewsManager news={news} setNews={setNews} />
-            )}
+                {activeTab === 'news' && (
+                    <NewsManager news={news} setNews={setNews} />
+                )}
 
-            {activeTab === 'courses' && (
-                <CourseManager courses={courses} setCourses={setCourses} />
-            )}
+                {activeTab === 'courses' && (
+                    <CourseManager courses={courses} setCourses={setCourses} />
+                )}
 
-            {activeTab === 'teachers' && (
-                <TeacherManager teachers={teachers} setTeachers={setTeachers} />
-            )}
+                {activeTab === 'teachers' && (
+                    <TeacherManager teachers={teachers} setTeachers={setTeachers} />
+                )}
 
-            {activeTab === 'banners' && (
-                <BannerManager banners={banners} setBanners={setBanners} />
-            )}
+                {activeTab === 'banners' && (
+                    <BannerManager banners={banners} setBanners={setBanners} />
+                )}
             </div>
         </AdminGuard>
     );

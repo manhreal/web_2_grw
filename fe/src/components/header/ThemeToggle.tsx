@@ -51,9 +51,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ isMobile = false }) =>
             onClick={toggleTheme}
             className="flex items-center justify-between w-full rounded-lg px-4 py-3 transition-colors duration-300"
             style={{ backgroundColor: isDarkMode ? '#374151' : '#F3F4F6' }}
-            aria-label={isDarkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+            aria-label={isDarkMode ? "Change to Light mode" : "Change to Dark mode"}
         >
-            <span className="font-medium">{isDarkMode ? 'Chế độ sáng' : 'Chế độ tối'}</span>
+            <span className="font-medium">{isDarkMode ? 'Light mode' : 'Dark mode'}</span>
 
             {/* Enhanced toggle for mobile */}
             <div className="relative w-14 h-7 flex items-center">

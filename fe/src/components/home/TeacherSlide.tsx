@@ -1,3 +1,4 @@
+// Import necessary dependencies
 import React, { useEffect, useState, useRef, TouchEvent, useCallback } from 'react';
 import Image from 'next/image';
 import { getTeachers } from '@/api/home-show/view';
@@ -7,6 +8,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Award } from 'lucide-react';
 
+// Teacher interface definition
 export interface Teacher {
     _id: string;
     name: string;
@@ -18,17 +20,21 @@ export interface Teacher {
 }
 
 const TeacherSlide: React.FC = () => {
+    // Theme and state declarations
     const { isDarkMode } = useTheme();
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [activeIndex, setActiveIndex] = useState(0);
-    const thumbnailSliderRef = useRef<HTMLDivElement>(null);
-    const autoplayRef = useRef<NodeJS.Timeout | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
 
+    // Refs
+    const thumbnailSliderRef = useRef<HTMLDivElement>(null);
+    const autoplayRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Fetch teacher data
     useEffect(() => {
         const fetchTeachers = async () => {
             try {
@@ -37,10 +43,10 @@ const TeacherSlide: React.FC = () => {
                 if (response.success) {
                     setTeachers(response.data);
                 } else {
-                    setError('Không thể tải dữ liệu giáo viên');
+                    setError('Unable to load teacher data');
                 }
             } catch (err) {
-                setError('Đã xảy ra lỗi khi tải dữ liệu');
+                setError('An error occurred while loading data');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -50,93 +56,148 @@ const TeacherSlide: React.FC = () => {
         fetchTeachers();
     }, []);
 
-    // Hàm xử lý URL ảnh
-    const getImageUrl = (imagePath: string): string => {
+    // Image URL processing function
+    const getImageUrl = useCallback((imagePath: string): string => {
         if (imagePath.startsWith('http')) {
             return imagePath;
         }
         const decodedPath = decodeURIComponent(imagePath);
         return `${SERVER_URL}/${decodedPath.replace(/^\//, '')}`;
-    };
+    }, []);
 
     // Navigation functions with looping
-    const goToPrevious = () => {
+    const goToPrevious = useCallback(() => {
         setActiveIndex((prev) => (prev === 0 ? teachers.length - 1 : prev - 1));
-    };
+    }, [teachers.length]);
 
-    const goToNext = () => {
+    const goToNext = useCallback(() => {
         setActiveIndex((prev) => (prev === teachers.length - 1 ? 0 : prev + 1));
-    };
+    }, [teachers.length]);
 
-    const goToSlide = (index: number) => {
+    const goToSlide = useCallback((index: number) => {
         setActiveIndex(index);
-        // Reset autoplay timer when manually changing slides
         resetAutoplay();
-    };
+    }, []);
 
-    // Thumbnail slider navigation - Updated for smooth circular scrolling
-    const scrollThumbnailsLeft = () => {
-        if (thumbnailSliderRef.current) {
-            const containerWidth = thumbnailSliderRef.current.offsetWidth;
-            const scrollAmount = containerWidth / 2; // Scroll half container width
+    // Thumbnail slider navigation functions
+    const scrollThumbnailsLeft = useCallback(() => {
+        if (!thumbnailSliderRef.current) return;
 
-            if (thumbnailSliderRef.current.scrollLeft <= 0) {
-                // If already at the beginning, loop to the end
-                thumbnailSliderRef.current.scrollTo({
-                    left: thumbnailSliderRef.current.scrollWidth,
-                    behavior: 'smooth'
-                });
-            } else {
-                thumbnailSliderRef.current.scrollBy({
-                    left: -scrollAmount,
-                    behavior: 'smooth'
-                });
-            }
+        const containerWidth = thumbnailSliderRef.current.offsetWidth;
+        const scrollAmount = containerWidth / 2; // Scroll half container width
+
+        if (thumbnailSliderRef.current.scrollLeft <= 0) {
+            // If already at the beginning, loop to the end
+            thumbnailSliderRef.current.scrollTo({
+                left: thumbnailSliderRef.current.scrollWidth,
+                behavior: 'smooth'
+            });
+        } else {
+            thumbnailSliderRef.current.scrollBy({
+                left: -scrollAmount,
+                behavior: 'smooth'
+            });
         }
-    };
+    }, []);
 
-    const scrollThumbnailsRight = () => {
-        if (thumbnailSliderRef.current) {
-            const containerWidth = thumbnailSliderRef.current.offsetWidth;
-            const scrollAmount = containerWidth / 2; // Scroll half container width
+    const scrollThumbnailsRight = useCallback(() => {
+        if (!thumbnailSliderRef.current) return;
 
-            // Check if we've reached the end
-            const maxScrollLeft = thumbnailSliderRef.current.scrollWidth - thumbnailSliderRef.current.offsetWidth;
+        const containerWidth = thumbnailSliderRef.current.offsetWidth;
+        const scrollAmount = containerWidth / 2; // Scroll half container width
+        const maxScrollLeft = thumbnailSliderRef.current.scrollWidth - thumbnailSliderRef.current.offsetWidth;
 
-            if (thumbnailSliderRef.current.scrollLeft >= maxScrollLeft - 10) {
-                // If at the end, loop back to the beginning
-                thumbnailSliderRef.current.scrollTo({
-                    left: 0,
-                    behavior: 'smooth'
-                });
-            } else {
-                thumbnailSliderRef.current.scrollBy({
-                    left: scrollAmount,
-                    behavior: 'smooth'
-                });
-            }
+        if (thumbnailSliderRef.current.scrollLeft >= maxScrollLeft - 10) {
+            // If at the end, loop back to the beginning
+            thumbnailSliderRef.current.scrollTo({
+                left: 0,
+                behavior: 'smooth'
+            });
+        } else {
+            thumbnailSliderRef.current.scrollBy({
+                left: scrollAmount,
+                behavior: 'smooth'
+            });
         }
-    };
+    }, []);
 
     // Autoplay functionality
-    const startAutoplay = useCallback(() => {
-        stopAutoplay(); // Clear existing timeout first
-        autoplayRef.current = setInterval(() => {
-            setActiveIndex(prevIndex => (prevIndex === teachers.length - 1 ? 0 : prevIndex + 1));
-        }, 2000);
-    }, [teachers.length]); // Thêm teachers.length vào dependencies của useCallback
-
-    const stopAutoplay = () => {
+    const stopAutoplay = useCallback(() => {
         if (autoplayRef.current) {
             clearInterval(autoplayRef.current);
             autoplayRef.current = null;
         }
-    };
+    }, []);
 
-    const resetAutoplay = () => {
+    const startAutoplay = useCallback(() => {
+        stopAutoplay(); // Clear existing timeout first
+        if (teachers.length <= 1) return; // Don't start autoplay if there's only one teacher
+
+        autoplayRef.current = setInterval(() => {
+            setActiveIndex(prevIndex => (prevIndex === teachers.length - 1 ? 0 : prevIndex + 1));
+        }, 3000); // Increased from 2000ms to 3000ms for better user experience
+    }, [teachers.length, stopAutoplay]);
+
+    const resetAutoplay = useCallback(() => {
         stopAutoplay();
         startAutoplay();
-    };
+    }, [stopAutoplay, startAutoplay]);
+
+    // Mouse event handlers
+    const handleMouseEnter = useCallback(() => {
+        stopAutoplay();
+    }, [stopAutoplay]);
+
+    const handleMouseLeave = useCallback(() => {
+        startAutoplay();
+    }, [startAutoplay]);
+
+    // Drag functionality handlers
+    const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (!thumbnailSliderRef.current) return;
+
+        setIsDragging(true);
+        setStartX(e.pageX - thumbnailSliderRef.current.offsetLeft);
+        setScrollLeft(thumbnailSliderRef.current.scrollLeft);
+    }, []);
+
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging || !thumbnailSliderRef.current) return;
+
+        e.preventDefault();
+        const x = e.pageX - thumbnailSliderRef.current.offsetLeft;
+        const walk = (x - startX) * 2; // Scroll speed multiplier
+        thumbnailSliderRef.current.scrollLeft = scrollLeft - walk;
+    }, [isDragging, startX, scrollLeft]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    const handleMouseLeaveSlider = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    // Touch event handlers for mobile
+    const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {
+        if (!thumbnailSliderRef.current) return;
+
+        setIsDragging(true);
+        setStartX(e.touches[0].pageX - thumbnailSliderRef.current.offsetLeft);
+        setScrollLeft(thumbnailSliderRef.current.scrollLeft);
+    }, []);
+
+    const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
+        if (!isDragging || !thumbnailSliderRef.current) return;
+
+        const x = e.touches[0].pageX - thumbnailSliderRef.current.offsetLeft;
+        const walk = (x - startX) * 2;
+        thumbnailSliderRef.current.scrollLeft = scrollLeft - walk;
+    }, [isDragging, startX, scrollLeft]);
+
+    const handleTouchEnd = useCallback(() => {
+        setIsDragging(false);
+    }, []);
 
     // Start autoplay when component mounts or teachers data changes
     useEffect(() => {
@@ -147,84 +208,30 @@ const TeacherSlide: React.FC = () => {
         return () => {
             stopAutoplay();
         };
-    }, [teachers.length, startAutoplay]);
-    // Pause autoplay when mouse hovers over the slider
-    const handleMouseEnter = () => {
-        stopAutoplay();
-    };
+    }, [teachers.length, startAutoplay, stopAutoplay]);
 
-    const handleMouseLeave = () => {
-        startAutoplay();
-    };
-
-    // Drag functionality for thumbnail slider
-    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!thumbnailSliderRef.current) return;
-
-        setIsDragging(true);
-        setStartX(e.pageX - thumbnailSliderRef.current.offsetLeft);
-        setScrollLeft(thumbnailSliderRef.current.scrollLeft);
-    };
-
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!isDragging || !thumbnailSliderRef.current) return;
-
-        e.preventDefault();
-        const x = e.pageX - thumbnailSliderRef.current.offsetLeft;
-        const walk = (x - startX) * 2; // Scroll speed multiplier
-        thumbnailSliderRef.current.scrollLeft = scrollLeft - walk;
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-    };
-
-    const handleMouseLeaveSlider = () => {
-        setIsDragging(false);
-    };
-
-    // Touch support for mobile devices
-    const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
-        if (!thumbnailSliderRef.current) return;
-
-        setIsDragging(true);
-        setStartX(e.touches[0].pageX - thumbnailSliderRef.current.offsetLeft);
-        setScrollLeft(thumbnailSliderRef.current.scrollLeft);
-    };
-
-    const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
-        if (!isDragging || !thumbnailSliderRef.current) return;
-
-        const x = e.touches[0].pageX - thumbnailSliderRef.current.offsetLeft;
-        const walk = (x - startX) * 2;
-        thumbnailSliderRef.current.scrollLeft = scrollLeft - walk;
-    };
-
-    const handleTouchEnd = () => {
-        setIsDragging(false);
-    };
-
-    // Scroll active thumbnail into view - with loop handling
+    // Scroll active thumbnail into view
     useEffect(() => {
-        if (thumbnailSliderRef.current && teachers.length > 0) {
-            const thumbnails = thumbnailSliderRef.current.children;
-            if (thumbnails[activeIndex]) {
-                const thumbnail = thumbnails[activeIndex] as HTMLElement;
-                const containerWidth = thumbnailSliderRef.current.offsetWidth;
-                const thumbnailLeft = thumbnail.offsetLeft;
-                const thumbnailWidth = thumbnail.offsetWidth;
+        if (!thumbnailSliderRef.current || teachers.length === 0) return;
 
-                // Calculate the center position for the thumbnail
-                const scrollPosition = thumbnailLeft - (containerWidth / 2) + (thumbnailWidth / 2);
+        const thumbnails = thumbnailSliderRef.current.children;
+        if (!thumbnails[activeIndex]) return;
 
-                thumbnailSliderRef.current.scrollTo({
-                    left: scrollPosition,
-                    behavior: 'smooth'
-                });
-            }
-        }
+        const thumbnail = thumbnails[activeIndex] as HTMLElement;
+        const containerWidth = thumbnailSliderRef.current.offsetWidth;
+        const thumbnailLeft = thumbnail.offsetLeft;
+        const thumbnailWidth = thumbnail.offsetWidth;
+
+        // Calculate the center position for the thumbnail
+        const scrollPosition = thumbnailLeft - (containerWidth / 2) + (thumbnailWidth / 2);
+
+        thumbnailSliderRef.current.scrollTo({
+            left: scrollPosition,
+            behavior: 'smooth'
+        });
     }, [activeIndex, teachers.length]);
 
+    // Loading state UI
     if (loading) {
         return (
             <div className={`flex justify-center items-center h-64 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
@@ -233,17 +240,21 @@ const TeacherSlide: React.FC = () => {
         );
     }
 
+    // Error state UI
     if (error) {
         return <div className={`text-red-500 text-center py-10 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>{error}</div>;
     }
 
+    // Empty state
     if (teachers.length === 0) {
         return null;
     }
 
+    // Get active teacher and parse achievements
     const activeTeacher = teachers[activeIndex];
-    const achievements = activeTeacher.achievements ? activeTeacher.achievements.split('/') : [];
+    const achievements = activeTeacher.achievements ? activeTeacher.achievements.split('/').filter(item => item.trim()) : [];
 
+    // Main component render
     return (
         <div className={`pb-20 px-4 overflow-hidden transition-colors duration-300 ${isDarkMode ? ' text-gray-100' : ' text-gray-800'}`}>
             <div className="container mx-auto px-4 md:px-6 relative">
@@ -257,9 +268,8 @@ const TeacherSlide: React.FC = () => {
                         className="text-center mb-12"
                     >
                         <h2 className={`text-3xl md:text-4xl font-bold mb-3 py-2 ${isDarkMode ? 'text-gradient-dark' : 'text-gradient-light'}`}>
-                            ĐỒNG HÀNH BỞI ĐỘI NGŨ GIẢNG VIÊN CHUYÊN MÔN CAO
+                            ACCOMPANIED BY HIGHLY SKILLED FACULTY
                         </h2>
-
                     </motion.div>
 
                     {/* Main Feature Teacher */}
@@ -277,7 +287,7 @@ const TeacherSlide: React.FC = () => {
                                 transition={{ duration: 0.5 }}
                                 className="relative"
                             >
-                                {/* Only show large image on desktop */}
+                                {/* Desktop image */}
                                 <div className="relative hidden lg:block">
                                     <div className="relative h-[30rem] w-[30rem] flex items-center justify-center">
                                         <Image
@@ -293,7 +303,7 @@ const TeacherSlide: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Circular Profile Image - shown on all screens */}
+                                {/* Mobile image */}
                                 <div className="block lg:hidden relative">
                                     <div className="relative h-64 w-64 mx-auto">
                                         <Image
@@ -361,15 +371,13 @@ const TeacherSlide: React.FC = () => {
                                     <div>
                                         <ul className="space-y-3">
                                             {achievements.map((achievement, index) => (
-                                                achievement.trim() && (
-                                                    <li key={index} className="flex items-start">
-                                                        <Award size={24} className="mr-2 mt-1 text-amber-500" />
-
-                                                        <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{achievement.trim()}</span>
-                                                    </li>
-                                                )
+                                                <li key={index} className="flex items-start">
+                                                    <Award size={24} className="mr-2 mt-1 text-amber-500" />
+                                                    <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                        {achievement}
+                                                    </span>
+                                                </li>
                                             ))}
-
                                         </ul>
                                     </div>
                                 )}
@@ -378,7 +386,7 @@ const TeacherSlide: React.FC = () => {
                             {/* Teacher Thumbnails Slider */}
                             <div className="mt-8 relative">
                                 <h4 className={`text-center text-sm font-medium mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                    Giảng viên khác
+                                    Other Faculty
                                 </h4>
 
                                 {/* Thumbnail Slider Navigation Buttons */}
@@ -443,38 +451,39 @@ const TeacherSlide: React.FC = () => {
                 </div>
             </div>
 
+            {/* CSS Styles */}
             <style jsx global>{`
-    .text-gradient-dark {
-        background: linear-gradient(to right, #60a5fa, #a78bfa);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .text-gradient-light {
-        background: linear-gradient(to right, #2563eb, #7c3aed);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    
-    /* Hide scrollbar for IE, Edge and Firefox */
-    .scrollbar-hide {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-    }
-    
-    /* Responsive image containers */
-    @media (min-width: 1024px) {
-        .teacher-image-container {
-            height: auto;
-            max-height: 32rem;
-        }
-    }
-`}</style>
+                .text-gradient-dark {
+                    background: linear-gradient(to right, #60a5fa, #a78bfa);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                
+                .text-gradient-light {
+                    background: linear-gradient(to right, #2563eb, #7c3aed);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                
+                /* Hide scrollbar for Chrome, Safari and Opera */
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                }
+                
+                /* Hide scrollbar for IE, Edge and Firefox */
+                .scrollbar-hide {
+                    -ms-overflow-style: none;  /* IE and Edge */
+                    scrollbar-width: none;  /* Firefox */
+                }
+                
+                /* Responsive image containers */
+                @media (min-width: 1024px) {
+                    .teacher-image-container {
+                        height: auto;
+                        max-height: 32rem;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

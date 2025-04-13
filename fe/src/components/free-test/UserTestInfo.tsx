@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { UserTest } from '@/api/testFree';
 import AnimatedInput from '../suport-page/AnimatedInput';
 import TopUsersLeaderboard from './TopUsersLeaderboard';
@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { useTheme } from '@/context/ThemeContext';
 
+// Interface definitions
 interface UserTestInfoProps {
     userData: UserTest;
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
@@ -15,7 +16,6 @@ interface UserTestInfoProps {
     loading: boolean;
     error: string | null;
 }
-
 
 interface Province {
     name: string;
@@ -43,6 +43,57 @@ interface Ward {
     district_code: number;
 }
 
+// Select field component
+const SelectField = ({
+    id,
+    name,
+    label,
+    value,
+    onChange,
+    options,
+    isLoading,
+    error,
+    isDarkMode
+}: {
+    id: string;
+    name: string;
+    label: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    options: { id: string; name: string }[];
+    isLoading: boolean;
+    error?: string;
+    isDarkMode: boolean;
+}) => (
+    <div className="mb-4 relative">
+        <label htmlFor={id} className={`block mb-2 text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            {label} {isLoading && <span className="ml-2 inline-block animate-pulse">Loading...</span>}
+        </label>
+        <select
+            id={id}
+            name={name}
+            value={value}
+            onChange={onChange}
+            disabled={isLoading || options.length === 0}
+            className={`w-full p-2.5 text-sm rounded-lg ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
+                    : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
+                } ${error ? 'border-red-500' : ''} ${isLoading || options.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+            <option key={`${name}-default`} value="">-- Select {label} --</option>
+            {options.map(option => (
+                <option key={option.id} value={option.id}>
+                    {option.name}
+                </option>
+            ))}
+        </select>
+        {error && (
+            <p className={`mt-2 text-sm ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
+        )}
+    </div>
+);
+
+// Main component
 export default function UserTestInfo({
     userData,
     handleInputChange,
@@ -50,7 +101,10 @@ export default function UserTestInfo({
     loading,
     error
 }: UserTestInfoProps) {
+    // Theme context
     const { isDarkMode } = useTheme();
+
+    // Form validation state
     const [fieldErrors, setFieldErrors] = useState({
         fullName: '',
         email: '',
@@ -60,6 +114,7 @@ export default function UserTestInfo({
         ward: ''
     });
 
+    // Address data states
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
@@ -69,25 +124,53 @@ export default function UserTestInfo({
         ward: '',
         streetAddress: ''
     });
+
+    // Loading states
     const [loadingProvinces, setLoadingProvinces] = useState(false);
     const [loadingDistricts, setLoadingDistricts] = useState(false);
     const [loadingWards, setLoadingWards] = useState(false);
 
+    // Animation variants
+    const pageVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                duration: 0.5,
+                when: "beforeChildren",
+                staggerChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 100
+            }
+        }
+    };
+
+    // Fetch provinces data
     useEffect(() => {
         const fetchProvinces = async () => {
             setLoadingProvinces(true);
             try {
                 const response = await fetch('https://provinces.open-api.vn/api/p/');
                 if (!response.ok) {
-                    throw new Error('Lỗi khi tải danh sách tỉnh thành');
+                    throw new Error('Error loading province list');
                 }
                 const data = await response.json();
                 setProvinces(data);
             } catch (error) {
-                console.error('Lỗi khi tải danh sách tỉnh thành:', error);
+                console.error('Error loading province list:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: 'Lỗi khi tải danh sách tỉnh thành. Vui lòng thử lại.',
+                    text: 'Error loading province list. Please try again.',
                     icon: 'error',
                     confirmButtonColor: '#3B82F6'
                 });
@@ -99,9 +182,7 @@ export default function UserTestInfo({
         fetchProvinces();
     }, []);
 
-    useEffect(() => {
-    }, [provinces]);
-
+    // Fetch districts when province changes
     useEffect(() => {
         if (!selectedAddress.province) {
             setDistricts([]);
@@ -113,12 +194,12 @@ export default function UserTestInfo({
             try {
                 const response = await fetch(`https://provinces.open-api.vn/api/p/${selectedAddress.province}?depth=2`);
                 if (!response.ok) {
-                    throw new Error('Lỗi khi tải danh sách quận huyện');
+                    throw new Error('Error loading district list');
                 }
                 const data = await response.json();
                 setDistricts(data.districts || []);
             } catch (error) {
-                console.error('Lỗi khi tải danh sách quận huyện:', error);
+                console.error('Error loading district list:', error);
                 setDistricts([]);
             } finally {
                 setLoadingDistricts(false);
@@ -128,6 +209,7 @@ export default function UserTestInfo({
         fetchDistricts();
     }, [selectedAddress.province]);
 
+    // Fetch wards when district changes
     useEffect(() => {
         if (!selectedAddress.district) {
             setWards([]);
@@ -139,12 +221,12 @@ export default function UserTestInfo({
             try {
                 const response = await fetch(`https://provinces.open-api.vn/api/d/${selectedAddress.district}?depth=2`);
                 if (!response.ok) {
-                    throw new Error('Lỗi khi tải danh sách phường xã');
+                    throw new Error('Error loading ward list');
                 }
                 const data = await response.json();
                 setWards(data.wards || []);
             } catch (error) {
-                console.error('Lỗi khi tải danh sách phường xã:', error);
+                console.error('Error loading ward list:', error);
                 setWards([]);
             } finally {
                 setLoadingWards(false);
@@ -154,56 +236,76 @@ export default function UserTestInfo({
         fetchWards();
     }, [selectedAddress.district]);
 
-    const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    // Handle address selection changes
+    const handleAddressChange = useCallback((e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
         const { name, value } = e.target;
 
-        setSelectedAddress(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setSelectedAddress(prev => {
+            const newState = { ...prev, [name]: value };
 
-        if (name === 'province') {
-            setSelectedAddress(prev => ({
-                ...prev,
-                district: '',
-                ward: ''
-            }));
-        }
-
-        // If changing district, reset ward
-        if (name === 'district') {
-            setSelectedAddress(prev => ({
-                ...prev,
-                ward: ''
-            }));
-        }
-
-        const addressObject = { ...selectedAddress, [name]: value };
-
-        // Find the names for the selected IDs
-        const provinceName = provinces.find(p => p.code.toString() === addressObject.province)?.name || '';
-        const districtName = districts.find(d => d.code.toString() === addressObject.district)?.name || '';
-        const wardName = wards.find(w => w.code.toString() === addressObject.ward)?.name || '';
-
-        // Construct full address
-        let fullAddress = addressObject.streetAddress ? addressObject.streetAddress + ', ' : '';
-        if (wardName) fullAddress += wardName + ', ';
-        if (districtName) fullAddress += districtName + ', ';
-        if (provinceName) fullAddress += provinceName;
-
-        // Create a synthetic event to update the parent's userData state
-        const syntheticEvent = {
-            target: {
-                name: 'address',
-                value: fullAddress.trim()
+            // Reset dependent fields
+            if (name === 'province') {
+                newState.district = '';
+                newState.ward = '';
+            } else if (name === 'district') {
+                newState.ward = '';
             }
-        } as React.ChangeEvent<HTMLInputElement>;
 
-        handleInputChange(syntheticEvent);
-    };
+            return newState;
+        });
 
-    // Validate form
-    const validateForm = (e: React.FormEvent) => {
+        // Only update the address if this is a select field change
+        if (name !== 'streetAddress') {
+            // Find the names for the selected IDs
+            setTimeout(() => {
+                const updatedAddress = { ...selectedAddress, [name]: value };
+
+                const provinceName = provinces.find(p => p.code.toString() === updatedAddress.province)?.name || '';
+                const districtName = districts.find(d => d.code.toString() === updatedAddress.district)?.name || '';
+                const wardName = wards.find(w => w.code.toString() === updatedAddress.ward)?.name || '';
+
+                // Construct full address
+                let fullAddress = updatedAddress.streetAddress ? updatedAddress.streetAddress + ', ' : '';
+                if (wardName) fullAddress += wardName + ', ';
+                if (districtName) fullAddress += districtName + ', ';
+                if (provinceName) fullAddress += provinceName;
+
+                // Create a synthetic event to update the parent's userData state
+                const syntheticEvent = {
+                    target: {
+                        name: 'address',
+                        value: fullAddress.trim()
+                    }
+                } as React.ChangeEvent<HTMLInputElement>;
+
+                handleInputChange(syntheticEvent);
+            }, 0);
+        } else {
+            // Handle street address changes
+            const provinceName = provinces.find(p => p.code.toString() === selectedAddress.province)?.name || '';
+            const districtName = districts.find(d => d.code.toString() === selectedAddress.district)?.name || '';
+            const wardName = wards.find(w => w.code.toString() === selectedAddress.ward)?.name || '';
+
+            // Construct full address
+            let fullAddress = value ? value + ', ' : '';
+            if (wardName) fullAddress += wardName + ', ';
+            if (districtName) fullAddress += districtName + ', ';
+            if (provinceName) fullAddress += provinceName;
+
+            // Create a synthetic event to update the parent's userData state
+            const syntheticEvent = {
+                target: {
+                    name: 'address',
+                    value: fullAddress.trim()
+                }
+            } as React.ChangeEvent<HTMLInputElement>;
+
+            handleInputChange(syntheticEvent);
+        }
+    }, [selectedAddress, provinces, districts, wards, handleInputChange]);
+
+    // Form validation function
+    const validateForm = useCallback((e: React.FormEvent) => {
         e.preventDefault();
 
         // Reset field errors
@@ -308,79 +410,9 @@ export default function UserTestInfo({
 
         // Continue with the original form submission
         handleRegistration(e);
-    };
+    }, [userData, selectedAddress, isDarkMode, handleRegistration]);
 
-    // Animation variants
-    const pageVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                duration: 0.5,
-                when: "beforeChildren",
-                staggerChildren: 0.2
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 100
-            }
-        }
-    };
-
-    // Custom select component with loading state
-    const SelectField = ({
-        id,
-        name,
-        label,
-        value,
-        onChange,
-        options,
-        isLoading,
-        error
-    }: {
-        id: string;
-        name: string;
-        label: string;
-        value: string;
-        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-        options: { id: string; name: string }[];
-        isLoading: boolean;
-        error?: string;
-    }) => (
-        <div className="mb-4 relative">
-            <label htmlFor={id} className={`block mb-2 text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                {label} {isLoading && <span className="ml-2 inline-block animate-pulse">Loading...</span>}
-            </label>
-            <select
-                id={id} name={name} value={value} onChange={onChange} disabled={isLoading || options.length === 0} 
-                className={`w-full p-2.5 text-sm rounded-lg ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
-                    : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
-                    } ${error ? isDarkMode ? 'border-red-500' : 'border-red-500' : ''} ${isLoading || options.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`} // Style when disabled
-            >
-
-                <option key={`${name}-default`} value="">-- Select {label} --</option>
-                {/* Render options from the mapped array */}
-                {options.map(option => (
-                    <option key={option.id} value={option.id}>
-                        {option.name}
-                    </option>
-                ))}
-            </select>
-            {error && (
-                <p className={`mt-2 text-sm ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
-            )}
-        </div>
-    );
-
+    // Render component
     return (
         <motion.div
             initial="hidden"
@@ -407,13 +439,13 @@ export default function UserTestInfo({
                             variants={itemVariants}
                             className="mb-4"
                         >
-                            Vui lòng điền thông tin trước khi làm bài Test.
+                            Please fill in your information before taking the test.
                         </motion.p>
                         <motion.p
                             variants={itemVariants}
                             className="mb-4"
                         >
-                            *Thông tin của bạn sẽ được gửi yêu cầu tư vấn miễn phí, đánh giá theo bài test.
+                            *Your information will be used to send you a free consultation request and evaluation based on your test.
                         </motion.p>
 
                         {error && (
@@ -430,7 +462,7 @@ export default function UserTestInfo({
                             <AnimatedInput
                                 id="fullName"
                                 name="fullName"
-                                label="Họ và tên"
+                                label="Full Name"
                                 type='text'
                                 value={userData.fullName || ''}
                                 onChange={handleInputChange}
@@ -452,64 +484,67 @@ export default function UserTestInfo({
                             <AnimatedInput
                                 id="phone"
                                 name="phone"
-                                label="Số điện thoại"
+                                label="Phone Number"
                                 type="tel"
                                 value={userData.phone || ''}
                                 onChange={handleInputChange}
                                 required
                                 error={fieldErrors.phone}
                             />
+
                             {/* Address Selection */}
                             <div className="mb-4">
                                 <div className='grid grid-cols-2 gap-4'>
-                                <SelectField
-                                    id="province"
-                                    name="province"
-                                    label=""
-                                    value={selectedAddress.province}
-                                    onChange={handleAddressChange}
-                                    options={provinces.map(p => ({ id: p.code.toString(), name: p.name }))}
-                                    isLoading={loadingProvinces}
-                                    error={fieldErrors.province}
-                                />
-
-                                <SelectField
-                                    id="district"
-                                    name="district"
-                                    label=""
-                                    value={selectedAddress.district}
-                                    onChange={handleAddressChange}
-                                    options={districts.map(d => ({ id: d.code.toString(), name: d.name }))}
-                                    isLoading={loadingDistricts}
-                                    error={fieldErrors.district}
-                                />
-
-                                <SelectField
-                                    id="ward"
-                                    name="ward"
-                                    label=""
-                                    value={selectedAddress.ward}
-                                    onChange={handleAddressChange}
-                                    options={wards.map(w => ({ id: w.code.toString(), name: w.name }))}
-                                    isLoading={loadingWards}
-                                    error={fieldErrors.ward}
-                                />
-
-                                {/* Street Address */}
-                                <div>
-
-                                    <input
-                                        type="text"
-                                        id="streetAddress"
-                                        name="streetAddress"
-                                        value={selectedAddress.streetAddress}
+                                    <SelectField
+                                        id="province"
+                                        name="province"
+                                        label=""
+                                        value={selectedAddress.province}
                                         onChange={handleAddressChange}
-                                        placeholder="Số nhà, tên đường"
-                                        className={`w-full mt-2 p-2.5 text-sm rounded-lg ${isDarkMode
-                                            ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
-                                            : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
-                                            }`}
+                                        options={provinces.map(p => ({ id: p.code.toString(), name: p.name }))}
+                                        isLoading={loadingProvinces}
+                                        error={fieldErrors.province}
+                                        isDarkMode={isDarkMode}
                                     />
+
+                                    <SelectField
+                                        id="district"
+                                        name="district"
+                                        label=""
+                                        value={selectedAddress.district}
+                                        onChange={handleAddressChange}
+                                        options={districts.map(d => ({ id: d.code.toString(), name: d.name }))}
+                                        isLoading={loadingDistricts}
+                                        error={fieldErrors.district}
+                                        isDarkMode={isDarkMode}
+                                    />
+
+                                    <SelectField
+                                        id="ward"
+                                        name="ward"
+                                        label=""
+                                        value={selectedAddress.ward}
+                                        onChange={handleAddressChange}
+                                        options={wards.map(w => ({ id: w.code.toString(), name: w.name }))}
+                                        isLoading={loadingWards}
+                                        error={fieldErrors.ward}
+                                        isDarkMode={isDarkMode}
+                                    />
+
+                                    {/* Street Address */}
+                                    <div>
+                                        <input
+                                            type="text"
+                                            id="streetAddress"
+                                            name="streetAddress"
+                                            value={selectedAddress.streetAddress}
+                                            onChange={handleAddressChange}
+                                            placeholder="House number, street name"
+                                            className={`w-full mt-2 p-2.5 text-sm rounded-lg ${isDarkMode
+                                                    ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
+                                                    : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
+                                                }`}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -527,10 +562,10 @@ export default function UserTestInfo({
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Đang xử lí...
+                                        Processing...
                                     </span>
                                 ) : (
-                                    'Đăng ký & Tiếp tục'
+                                    'Register & Continue'
                                 )}
                             </motion.button>
                         </motion.form>

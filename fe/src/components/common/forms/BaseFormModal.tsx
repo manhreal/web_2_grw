@@ -32,6 +32,9 @@ export const openFormModal = async ({
     onSubmit,
     onImageUpload
 }: BaseFormModalProps): Promise<void> => {
+    // Lưu trữ file ảnh tạm thời
+    const tempImageFiles: Record<string, File> = {};
+
     const { value: formData } = await Swal.fire({
         title,
         customClass: {
@@ -122,7 +125,6 @@ export const openFormModal = async ({
                         if (!file) return;
 
                         try {
-                            Swal.showLoading();
                             if (!file.type.startsWith('image/')) {
                                 throw new Error('Chỉ chấp nhận file ảnh');
                             }
@@ -130,21 +132,20 @@ export const openFormModal = async ({
                                 throw new Error('Kích thước ảnh tối đa 5MB');
                             }
 
-                            const imageUrl = onImageUpload ? await onImageUpload(file) : '';
-                            if (!imageUrl) {
-                                throw new Error('Không nhận được URL ảnh');
-                            }
-                            await testImageUrl(imageUrl);
+                            // Chỉ tạo URL preview mà không upload
+                            const localPreviewUrl = URL.createObjectURL(file);
 
+                            // Lưu file để upload sau khi submit
+                            tempImageFiles[field.id] = file;
+
+                            // Hiển thị preview
                             preview.innerHTML = `
                                 <img
-                                    src="${imageUrl}" 
+                                    src="${localPreviewUrl}" 
                                     alt="Preview"
-                                    class="object-cover rounded w-full h-full"
-                                    onerror="this.onerror=null;this.src='/default-image.png';"
+                                    class="object-cover rounded-md border border-gray-200 w-full h-full"
                                 />
                             `;
-                            Swal.hideLoading();
                         } catch (error) {
                             Swal.fire({
                                 icon: 'error',
@@ -162,39 +163,85 @@ export const openFormModal = async ({
             const formValues: Record<string, string> = {};
             let isValid = true;
 
-            for (const field of fields) {
-                if (field.type === 'image') {
-                    const preview = document.getElementById(`${field.id}-preview`) as HTMLDivElement;
-                    const img = preview.querySelector('img');
+            try {
+                // Hiển thị loading khi bắt đầu xử lý
+                Swal.showLoading();
 
-                    if (field.required && !img?.src) {
-                        Swal.showValidationMessage(`Vui lòng upload ${field.label}`);
-                        isValid = false;
-                        break;
+                for (const field of fields) {
+                    if (field.type === 'image') {
+                        const preview = document.getElementById(`${field.id}-preview`) as HTMLDivElement;
+                        const img = preview.querySelector('img');
+
+                        if (field.required && !img?.src) {
+                            Swal.showValidationMessage(`Vui lòng upload ${field.label}`);
+                            isValid = false;
+                            break;
+                        }
+
+                        // Kiểm tra xem có phải ảnh mới không
+                        if (tempImageFiles[field.id]) {
+                            // Upload ảnh khi form submit
+                            if (onImageUpload) {
+                                try {
+                                    const imageUrl = await onImageUpload(tempImageFiles[field.id]);
+
+                                    // Kiểm tra URL ảnh hợp lệ
+                                    await testImageUrl(imageUrl);
+
+                                    formValues[field.id] = imageUrl.includes(SERVER_URL)
+                                        ? imageUrl.replace(SERVER_URL, '')
+                                        : imageUrl;
+                                } catch (error) {
+                                    Swal.showValidationMessage(`Lỗi khi tải ảnh: ${error instanceof Error ? error.message : 'Đã xảy ra lỗi'}`);
+                                    isValid = false;
+                                    break;
+                                }
+                            }
+                        } else if (img?.src) {
+                            // Giữ lại ảnh cũ nếu có
+                            formValues[field.id] = img.src.includes(SERVER_URL)
+                                ? img.src.replace(SERVER_URL, '')
+                                : img.src;
+                        } else {
+                            formValues[field.id] = '';
+                        }
+                    } else {
+                        const element = document.getElementById(field.id) as HTMLInputElement | HTMLTextAreaElement;
+
+                        if (field.required && !element?.value) {
+                            Swal.showValidationMessage(`Vui lòng nhập ${field.label}`);
+                            isValid = false;
+                            break;
+                        }
+
+                        formValues[field.id] = element?.value || '';
                     }
-
-                    const imgSrc = img?.src || '';
-                    formValues[field.id] = imgSrc.includes(SERVER_URL)
-                        ? imgSrc.replace(SERVER_URL, '')
-                        : imgSrc;
-                } else {
-                    const element = document.getElementById(field.id) as HTMLInputElement | HTMLTextAreaElement;
-
-                    if (field.required && !element?.value) {
-                        Swal.showValidationMessage(`Vui lòng nhập ${field.label}`);
-                        isValid = false;
-                        break;
-                    }
-
-                    formValues[field.id] = element?.value || '';
                 }
-            }
 
-            return isValid ? formValues : false;
+                // Ẩn loading khi hoàn thành xử lý
+                Swal.hideLoading();
+
+                return isValid ? formValues : false;
+            } catch (error) {
+                Swal.hideLoading();
+                Swal.showValidationMessage(`Lỗi: ${error instanceof Error ? error.message : 'Đã xảy ra lỗi'}`);
+                return false;
+            }
         }
     });
 
     if (formData) {
         onSubmit(formData);
     }
+
+    // Giải phóng bộ nhớ cho URL objects
+    Object.values(tempImageFiles).forEach(file => {
+        if (file instanceof File) {
+            const preview = document.getElementById(`${file.name}-preview`) as HTMLDivElement;
+            const img = preview?.querySelector('img');
+            if (img && img.src) {
+                URL.revokeObjectURL(img.src);
+            }
+        }
+    });
 };

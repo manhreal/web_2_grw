@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import { useTheme } from '@/context/ThemeContext';
 import { createAdvising } from '@/api/advising';
 
-// Interface for user advice data
+// User advice data interface
 interface UserAdvice {
     fullName?: string;
     email?: string;
@@ -16,7 +16,7 @@ interface UserAdvice {
     notes?: string;
 }
 
-// Interface definitions for location data
+// Interfaces for location data
 interface Province {
     name: string;
     code: number;
@@ -43,16 +43,30 @@ interface Ward {
     district_code: number;
 }
 
+// Props interface
 interface AdviseProps {
     onClose?: () => void;
 }
 
+// Main component
 export default function Advise({ onClose }: AdviseProps) {
     const { isDarkMode } = useTheme();
+
+    // State declarations
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
 
-    // User advice data state
+    // Location data states
+    const [provinces, setProvinces] = useState<Province[]>([]);
+    const [districts, setDistricts] = useState<District[]>([]);
+    const [wards, setWards] = useState<Ward[]>([]);
+    const [loadingProvinces, setLoadingProvinces] = useState(false);
+    const [loadingDistricts, setLoadingDistricts] = useState(false);
+    const [loadingWards, setLoadingWards] = useState(false);
+
+    // User data and form state
     const [userData, setUserData] = useState<UserAdvice>({
         fullName: '',
         email: '',
@@ -71,7 +85,7 @@ export default function Advise({ onClose }: AdviseProps) {
         ward: ''
     });
 
-    // Track which fields have been touched by the user
+    // Track touched fields for validation
     const [touchedFields, setTouchedFields] = useState({
         fullName: false,
         email: false,
@@ -82,25 +96,28 @@ export default function Advise({ onClose }: AdviseProps) {
         streetAddress: false
     });
 
-    // States for address selection
-    const [provinces, setProvinces] = useState<Province[]>([]);
-    const [districts, setDistricts] = useState<District[]>([]);
-    const [wards, setWards] = useState<Ward[]>([]);
+    // Address selection state
     const [selectedAddress, setSelectedAddress] = useState({
         province: '',
         district: '',
         ward: '',
         streetAddress: ''
     });
-    const [loadingProvinces, setLoadingProvinces] = useState(false);
-    const [loadingDistricts, setLoadingDistricts] = useState(false);
-    const [loadingWards, setLoadingWards] = useState(false);
 
-    // Form validity state
-    const [isFormValid, setIsFormValid] = useState(false);
-    const [formSubmitted, setFormSubmitted] = useState(false);
+    // Animation variants
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 100
+            }
+        }
+    };
 
-    // Handle input changes
+    // Event handlers
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setUserData(prevState => ({
@@ -117,7 +134,6 @@ export default function Advise({ onClose }: AdviseProps) {
         }
     };
 
-    // Handle input blur - mark field as touched when user leaves a field
     const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name } = e.target;
         setTouchedFields(prev => ({
@@ -126,7 +142,179 @@ export default function Advise({ onClose }: AdviseProps) {
         }));
     };
 
-    // Fetch provinces when component mounts
+    const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        setSelectedAddress(prev => ({
+            ...prev,
+            [name]: value,
+            ...(name === 'province' && { district: '', ward: '' }),
+            ...(name === 'district' && { ward: '' }),
+        }));
+
+        // Mark field as touched
+        setTouchedFields(prev => ({
+            ...prev,
+            [name]: true
+        }));
+    };
+
+    // Form submission handler
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // Mark all fields as touched
+        setTouchedFields({
+            fullName: true,
+            email: true,
+            phone: true,
+            province: true,
+            district: true,
+            ward: true,
+            streetAddress: true
+        });
+
+        setFormSubmitted(true);
+
+        if (!isFormValid) {
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            // Prepare data for API
+            const advisingData = {
+                fullName: userData.fullName || '',
+                email: userData.email || '',
+                phone: userData.phone || '',
+                address: userData.address || '',
+                notes: userData.notes
+            };
+
+            // Submit data to API
+            await createAdvising(advisingData);
+
+            // Show success message
+            Swal.fire({
+                title: 'Advising request sent successfully!',
+                html: `
+                <p>Thank you for your interest. We will respond to you soon.</p>
+                <p class="mt-3">Please check your email <strong>${userData.email}</strong> and phone <strong>${userData.phone}</strong> for updates.</p>
+                <div class="mt-4 text-left p-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg">
+                    <p class="font-semibold">You can also contact us through:</p>
+                    <p class="mt-2"><span class="font-medium">Phone:</span> +84 123 456 789</p>
+                    <p><span class="font-medium">Facebook:</span> facebook.com/englishcenter</p>
+                    <p><span class="font-medium">Zalo:</span> zalo.me/englishcenter</p>
+                </div>
+            `,
+                icon: 'success',
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#3B82F6',
+                background: isDarkMode ? '#1F2937' : '#FFFFFF',
+                color: isDarkMode ? '#F3F4F6' : '#000000',
+            }).then(() => {
+                if (onClose) onClose();
+            });
+
+            // Reset form after submission
+            setUserData({ fullName: '', email: '', phone: '', address: '', notes: '' });
+            setSelectedAddress({ province: '', district: '', ward: '', streetAddress: '' });
+            setFieldErrors({ fullName: '', email: '', phone: '', province: '', district: '', ward: '' });
+        } catch (err: unknown) {
+            console.error('Error submitting form:', err);
+
+            // Handle rate limit errors
+            if (err instanceof Error && err.message.includes('Too many requests')) {
+                Swal.fire({
+                    title: 'Request Limit',
+                    text: 'Too many requests. Please try again in 1 minute.',
+                    icon: 'warning',
+                    confirmButtonText: 'Close',
+                    confirmButtonColor: '#3085d6',
+                    background: isDarkMode ? '#1F2937' : '#FFFFFF',
+                    color: isDarkMode ? '#F3F4F6' : '#000000'
+                });
+            } else {
+                // Handle other errors
+                setError('Unable to send advising request. Please try again later.');
+
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Unable to send advising request. Please try again later.',
+                    icon: 'error',
+                    confirmButtonText: 'Close',
+                    confirmButtonColor: '#3085d6',
+                    background: isDarkMode ? '#1F2937' : '#FFFFFF',
+                    color: isDarkMode ? '#F3F4F6' : '#000000'
+                });
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Form validation
+    const validateForm = () => {
+        // Reset errors
+        const newErrors = {
+            fullName: '',
+            email: '',
+            phone: '',
+            province: '',
+            district: '',
+            ward: ''
+        };
+
+        let valid = true;
+
+        // Validation rules
+        if (!userData.fullName?.trim()) {
+            newErrors.fullName = 'Please enter your full name';
+            valid = false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!userData.email?.trim()) {
+            newErrors.email = 'Please enter your email';
+            valid = false;
+        } else if (!emailRegex.test(userData.email)) {
+            newErrors.email = 'Invalid email format';
+            valid = false;
+        }
+
+        const phoneRegex = /^\+?[0-9]{8,15}$/;
+        if (!userData.phone?.trim()) {
+            newErrors.phone = 'Please enter your phone number';
+            valid = false;
+        } else if (!phoneRegex.test(userData.phone)) {
+            newErrors.phone = 'Invalid phone number format';
+            valid = false;
+        }
+
+        if (!selectedAddress.province) {
+            newErrors.province = 'Please select a province/city';
+            valid = false;
+        }
+
+        if (selectedAddress.province && !selectedAddress.district) {
+            newErrors.district = 'Please select a district';
+            valid = false;
+        }
+
+        if (selectedAddress.district && !selectedAddress.ward) {
+            newErrors.ward = 'Please select a ward';
+            valid = false;
+        }
+
+        setFieldErrors(newErrors);
+        setIsFormValid(valid);
+    };
+
+    // Effects
+
+    // Fetch provinces on component mount
     useEffect(() => {
         const fetchProvinces = async () => {
             setLoadingProvinces(true);
@@ -208,7 +396,7 @@ export default function Advise({ onClose }: AdviseProps) {
         fetchWards();
     }, [selectedAddress.district]);
 
-    // Update full address whenever a part of it changes
+    // Update full address when parts change
     useEffect(() => {
         const provinceName = provinces.find(p => p.code.toString() === selectedAddress.province)?.name || '';
         const districtName = districts.find(d => d.code.toString() === selectedAddress.district)?.name || '';
@@ -232,177 +420,6 @@ export default function Advise({ onClose }: AdviseProps) {
         validateForm();
     }, [userData, selectedAddress]);
 
-    // Handle address selection changes
-    const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-        const { name, value } = e.target;
-
-        setSelectedAddress(prev => ({
-            ...prev,
-            [name]: value,
-            ...(name === 'province' && { district: '', ward: '' }),
-            ...(name === 'district' && { ward: '' }),
-        }));
-
-        // Mark field as touched
-        setTouchedFields(prev => ({
-            ...prev,
-            [name]: true
-        }));
-    };
-
-    // Validate form and update isFormValid state
-    const validateForm = () => {
-        // Reset field errors
-        const newErrors = {
-            fullName: '',
-            email: '',
-            phone: '',
-            province: '',
-            district: '',
-            ward: ''
-        };
-
-        let valid = true;
-
-        // Validation logic
-        if (!userData.fullName?.trim()) {
-            newErrors.fullName = 'Vui lòng điền họ và tên';
-            valid = false;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!userData.email?.trim()) {
-            newErrors.email = 'Vui lòng điền Email';
-            valid = false;
-        } else if (!emailRegex.test(userData.email)) {
-            newErrors.email = 'Email không đúng định dạng';
-            valid = false;
-        }
-
-        const phoneRegex = /^\+?[0-9]{8,15}$/;
-        if (!userData.phone?.trim()) {
-            newErrors.phone = 'Vui lòng điền số điện thoại';
-            valid = false;
-        } else if (!phoneRegex.test(userData.phone)) {
-            newErrors.phone = 'Số điện thoại không đúng định dạng';
-            valid = false;
-        }
-
-        if (!selectedAddress.province) {
-            newErrors.province = 'Vui lòng chọn Tỉnh/Thành phố';
-            valid = false;
-        }
-
-        if (selectedAddress.province && !selectedAddress.district) {
-            newErrors.district = 'Vui lòng chọn Quận/Huyện';
-            valid = false;
-        }
-
-        if (selectedAddress.district && !selectedAddress.ward) {
-            newErrors.ward = 'Vui lòng chọn Phường/Xã';
-            valid = false;
-        }
-
-        setFieldErrors(newErrors);
-        setIsFormValid(valid);
-    };
-
-    // Handle form submission
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Mark all fields as touched on submit
-        setTouchedFields({
-            fullName: true,
-            email: true,
-            phone: true,
-            province: true,
-            district: true,
-            ward: true,
-            streetAddress: true
-        });
-
-        setFormSubmitted(true);
-
-        if (!isFormValid) {
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            // Prepare the data for API submission
-            const advisingData = {
-                fullName: userData.fullName || '',
-                email: userData.email || '',
-                phone: userData.phone || '',
-                address: userData.address || '',
-                notes: userData.notes
-            };
-
-            // Call the API to create advising
-            await createAdvising(advisingData);
-
-            Swal.fire({
-                title: 'Đơn tư vấn đã được gửi thành công!',
-                html: `
-                <p>Cảm ơn bạn đã quan tâm. Chúng tôi sẽ sớm phản hồi cho bạn.</p>
-                <p class="mt-3">Vui lòng check email của bạn <strong>${userData.email}</strong> và số điện thoại <strong>${userData.phone}</strong> để nhận thông tin sớm nhất.</p>
-                <div class="mt-4 text-left p-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg">
-                    <p class="font-semibold">Bạn cũng có thể liên hệ với chúng tôi qua:</p>
-                    <p class="mt-2"><span class="font-medium">Phone:</span> +84 123 456 789</p>
-                    <p><span class="font-medium">Facebook:</span> facebook.com/englishcenter</p>
-                    <p><span class="font-medium">Zalo:</span> zalo.me/englishcenter</p>
-                </div>
-            `,
-                icon: 'success',
-                confirmButtonText: 'Close',
-                confirmButtonColor: '#3B82F6',
-                background: isDarkMode ? '#1F2937' : '#FFFFFF',
-                color: isDarkMode ? '#F3F4F6' : '#000000',
-            }).then(() => {
-                if (onClose) onClose();
-            });
-
-            // Reset form after successful submission
-            setUserData({ fullName: '', email: '', phone: '', address: '', notes: '' });
-            setSelectedAddress({ province: '', district: '', ward: '', streetAddress: '' });
-            setFieldErrors({ fullName: '', email: '', phone: '', province: '', district: '', ward: '' });
-        } catch (err: unknown) {
-            console.error('Error submitting form:', err);
-
-            // Check if the error contains the rate limit message
-            if (err instanceof Error && err.message.includes('Quá nhiều yêu cầu đến')) {
-                // Use SweetAlert for rate limit errors
-                Swal.fire({
-                    title: 'Giới hạn yêu cầu',
-                    text: 'Quá nhiều yêu cầu đến. Vui lòng thử lại sau 1 phút.',
-                    icon: 'warning',
-                    confirmButtonText: 'Đóng',
-                    confirmButtonColor: '#3085d6',
-                    background: isDarkMode ? '#1F2937' : '#FFFFFF',
-                    color: isDarkMode ? '#F3F4F6' : '#000000'
-                });
-            } else {
-                // Handle other errors
-                setError('Không thể gửi đơn tư vấn. Vui lòng thử lại sau.');
-
-                // You can also show an error SweetAlert if you prefer
-                Swal.fire({
-                    title: 'Lỗi',
-                    text: 'Không thể gửi đơn tư vấn. Vui lòng thử lại sau.',
-                    icon: 'error',
-                    confirmButtonText: 'Đóng',
-                    confirmButtonColor: '#3085d6',
-                    background: isDarkMode ? '#1F2937' : '#FFFFFF',
-                    color: isDarkMode ? '#F3F4F6' : '#000000'
-                });
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
     // Custom select component
     const SelectField = ({
         id, name, label, value, onChange, options, isLoading, error, touched
@@ -411,61 +428,58 @@ export default function Advise({ onClose }: AdviseProps) {
         onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
         options: { id: string; name: string }[];
         isLoading: boolean; error?: string; touched?: boolean;
-    }) => (
-        <div className="relative">
-            {label && (
-                <label htmlFor={id} className={`block mb-1 text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                    {label} {isLoading && <span className="ml-2 inline-block animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500"></span>}
-                </label>
-            )}
-            <select
-                id={id}
-                name={name}
-                value={value}
-                onChange={onChange}
-                onBlur={handleBlur}
-                disabled={isLoading || (name !== 'province' && !selectedAddress.province) || (name === 'ward' && !selectedAddress.district)}
-                className={`w-full p-2.5 text-sm rounded-lg ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
-                    : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
-                    } ${error && touched
-                        ? isDarkMode
-                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                            : 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                        : ''
-                    } ${isLoading || (name !== 'province' && !selectedAddress.province) || (name === 'ward' && !selectedAddress.district)
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}
-            >
-                <option value="">
-                    {name === 'province' ? '-- Select Province --' : name === 'district' ? '-- Select District --' : '-- Select Ward --'}
-                </option>
-                {!isLoading && options.map(option => (
-                    <option key={option.id} value={option.id}>
-                        {option.name}
-                    </option>
-                ))}
-                {isLoading && <option value="" disabled>Loading...</option>}
-            </select>
-            {error && touched && (
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
-            )}
-        </div>
-    );
+    }) => {
+        const placeholders = {
+            province: '-- Select Province --',
+            district: '-- Select District --',
+            ward: '-- Select Ward --'
+        };
 
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 100
-            }
-        }
+        const isDisabled = isLoading ||
+            (name !== 'province' && !selectedAddress.province) ||
+            (name === 'ward' && !selectedAddress.district);
+
+        return (
+            <div className="relative">
+                {label && (
+                    <label htmlFor={id} className={`block mb-1 text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                        {label} {isLoading && <span className="ml-2 inline-block animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500"></span>}
+                    </label>
+                )}
+                <select
+                    id={id}
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    onBlur={handleBlur}
+                    disabled={isDisabled}
+                    className={`w-full p-2.5 text-sm rounded-lg ${isDarkMode
+                            ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
+                            : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
+                        } ${error && touched
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : ''
+                        } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                >
+                    <option value="">
+                        {placeholders[name as keyof typeof placeholders] || '-- Select --'}
+                    </option>
+                    {!isLoading && options.map(option => (
+                        <option key={option.id} value={option.id}>
+                            {option.name}
+                        </option>
+                    ))}
+                    {isLoading && <option value="" disabled>Loading...</option>}
+                </select>
+                {error && touched && (
+                    <p className={`mt-1 text-xs ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
+                )}
+            </div>
+        );
     };
 
+    // Render component
     return (
         <motion.div className={`${isDarkMode ? 'text-gray-100' : 'text-gray-800'} w-full`}>
             <motion.div variants={itemVariants}>
@@ -474,27 +488,29 @@ export default function Advise({ onClose }: AdviseProps) {
                         variants={itemVariants}
                         className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center justify-center"
                     >
-                        <span className="mr-2">📝</span> Tạo yêu cầu tư vấn miễn phí
+                        <span className="mr-2">📝</span> Create Free Advising Request
                     </motion.h1>
 
                     {error && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className={`${isDarkMode ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-400 text-red-700'
+                            className={`${isDarkMode
+                                    ? 'bg-red-900/50 border-red-700 text-red-200'
+                                    : 'bg-red-100 border-red-400 text-red-700'
                                 } px-4 py-2 rounded text-sm mb-4 border`}
                         >
-                            <strong>Lỗi:</strong> {error}
+                            <strong>Error:</strong> {error}
                         </motion.div>
                     )}
 
                     <motion.form variants={itemVariants} onSubmit={handleSubmit} noValidate>
-                        {/* Personal Information */}
+                        {/* Personal Information Section */}
                         <div className="md:space-y-3 space-y-1">
                             <AnimatedInput
                                 id="fullName"
                                 name="fullName"
-                                label="Họ và tên"
+                                label="Full Name"
                                 type="text"
                                 value={userData.fullName || ''}
                                 onChange={handleInputChange}
@@ -519,7 +535,7 @@ export default function Advise({ onClose }: AdviseProps) {
                                 <AnimatedInput
                                     id="phone"
                                     name="phone"
-                                    label="Số điện thoại"
+                                    label="Phone Number"
                                     type="tel"
                                     value={userData.phone || ''}
                                     onChange={handleInputChange}
@@ -530,10 +546,10 @@ export default function Advise({ onClose }: AdviseProps) {
                             </div>
                         </div>
 
-                        {/* Address Selection */}
+                        {/* Address Selection Section */}
                         <div className="mb-3">
                             <label className={`block mb-2 text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                                Địa chỉ
+                                Address
                             </label>
 
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -572,10 +588,11 @@ export default function Advise({ onClose }: AdviseProps) {
                                     error={fieldErrors.ward}
                                     touched={touchedFields.ward || formSubmitted}
                                 />
+
                                 <AnimatedInput
                                     id="streetAddress"
                                     name="streetAddress"
-                                    label="Số nhà, tên đường"
+                                    label="Street address"
                                     type="text"
                                     value={selectedAddress.streetAddress}
                                     onChange={handleAddressChange}
@@ -584,10 +601,10 @@ export default function Advise({ onClose }: AdviseProps) {
                             </div>
                         </div>
 
-                        {/* Notes */}
+                        {/* Notes Section */}
                         <div className="mb-4">
                             <label htmlFor="notes" className={`block mb-2 text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                                Ghi chú
+                                Notes
                             </label>
                             <textarea
                                 id="notes"
@@ -595,22 +612,22 @@ export default function Advise({ onClose }: AdviseProps) {
                                 value={userData.notes || ''}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
-                                placeholder="Bất kì câu hỏi yêu cầu nào bạn cần"
+                                placeholder="Any questions or specific requests you may have"
                                 rows={3}
                                 className={`w-full p-2.5 text-sm rounded-lg ${isDarkMode
-                                    ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
-                                    : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
+                                        ? 'bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500'
+                                        : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
                                     }`}
                             />
                         </div>
 
-                        {/* Submit Buttons */}
+                        {/* Form Buttons */}
                         <div className='flex justify-end gap-4'>
                             <motion.button
                                 type="submit"
                                 className={`flex-grow ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'
                                     } text-white py-2.5 px-6 rounded-lg transition duration-150 ease-in-out font-medium 
-                                    ${!isFormValid || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                ${!isFormValid || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!isFormValid || loading}
                                 whileHover={isFormValid && !loading ? { scale: 1.03 } : {}}
                                 whileTap={isFormValid && !loading ? { scale: 0.98 } : {}}
@@ -630,7 +647,7 @@ export default function Advise({ onClose }: AdviseProps) {
                                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                             ></path>
                                         </svg>
-                                        Đang gửi yêu cầu...
+                                        Sending request...
                                     </span>
                                 ) : (
                                     <span className="flex items-center justify-center">
@@ -648,7 +665,7 @@ export default function Advise({ onClose }: AdviseProps) {
                                                 d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                                             ></path>
                                         </svg>
-                                        Gửi yêu cầu
+                                        Send Request
                                     </span>
                                 )}
                             </motion.button>
@@ -656,9 +673,9 @@ export default function Advise({ onClose }: AdviseProps) {
                             <motion.button
                                 type="button"
                                 onClick={onClose}
-                                className={`${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-600 hover:bg-red-700'} 
-                                    text-white py-2.5 px-6 rounded-lg transition duration-150 ease-in-out font-medium
-                                    flex items-center justify-center`}
+                                className={`${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-600 hover:bg-red-700'
+                                    } text-white py-2.5 px-6 rounded-lg transition duration-150 ease-in-out font-medium
+                                flex items-center justify-center`}
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.98 }}
                             >
@@ -676,7 +693,7 @@ export default function Advise({ onClose }: AdviseProps) {
                                         d="M6 18L18 6M6 6l12 12"
                                     ></path>
                                 </svg>
-                                Hủy
+                                Cancel
                             </motion.button>
                         </div>
                     </motion.form>

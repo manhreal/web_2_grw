@@ -7,13 +7,13 @@ import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const sections = [
-    { id: 'top', label: 'Tới đầu trang' },
-    { id: 'video', label: 'Giới thiệu' },
-    { id: 'reviews', label: 'Thông tin' },
-    { id: 'teachers', label: 'Giảng viên' },
-    { id: 'courses', label: 'Khóa học' },
-    { id: 'students', label: 'Học viên' },
-    { id: 'news', label: 'Tin tức' },
+    { id: 'top', label: 'Go to top' },
+    { id: 'video', label: 'Intro' },
+    { id: 'reviews', label: 'Information' },
+    { id: 'teachers', label: 'Faculty' },
+    { id: 'courses', label: 'Courses' },
+    { id: 'students', label: 'Students' },
+    { id: 'news', label: 'News' },
 ];
 
 export default function ScrollToSectionButton() {

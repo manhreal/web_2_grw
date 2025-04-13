@@ -115,7 +115,7 @@ app.post("/auth/google", loginRateLimiter, async (req, res) => {
         if (error.message && error.message.includes('rate limit')) {
             return res.status(429).json({
                 error: "rate_limit_exceeded",
-                message: "You have exceeded the maximum number of login attempts. Please try again after 2 minutes.",
+                message: "You have exceeded the maximum number of login attempts. Please try again after 1 minute.",
             });
         }
 

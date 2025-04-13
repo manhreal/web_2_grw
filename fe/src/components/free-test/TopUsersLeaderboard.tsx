@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { useTheme } from '@/context/ThemeContext';
 
+// Type definition for user data
 interface TopUser {
     userId: string;
     fullName: string;
@@ -22,13 +23,13 @@ interface TopUser {
 }
 
 export default function TopUsersLeaderboard() {
+    // State and context hooks
     const { isDarkMode } = useTheme();
     const [topUsers, setTopUsers] = useState<TopUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    
-    // Fetch dữ liệu chỉ một lần khi component mount
+    // Fetch data once when component mounts
     useEffect(() => {
         const fetchTopUsers = async () => {
             try {
@@ -41,7 +42,7 @@ export default function TopUsersLeaderboard() {
                 if (!response.ok) {
                     // Check if this is a rate limit error
                     if (data && data.message && typeof data.message === 'string' &&
-                        data.message.includes('Quá nhiều yêu cầu đến')) {
+                        data.message.includes('Too many requests')) {
                         throw new Error(data.message);
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -53,15 +54,15 @@ export default function TopUsersLeaderboard() {
                 console.error('Fetch error:', err);
 
                 // Check if the error is about rate limiting
-                if (err instanceof Error && err.message.includes('Quá nhiều yêu cầu đến')) {
-                    setError('Quá nhiều yêu cầu đến. Vui lòng thử lại sau 1 phút.');
+                if (err instanceof Error && err.message.includes('Too many requests')) {
+                    setError('Too many requests. Please try again after 1 minute.');
 
                     // Show specific rate limit error alert
                     Swal.fire({
-                        title: 'Giới hạn yêu cầu',
-                        text: 'Quá nhiều yêu cầu đến. Vui lòng thử lại sau 1 phút.',
+                        title: 'Request Limit',
+                        text: 'Too many requests. Please try again after 1 minute.',
                         icon: 'warning',
-                        confirmButtonText: 'Đóng',
+                        confirmButtonText: 'Close',
                         confirmButtonColor: '#3085d6',
                         background: isDarkMode ? '#1F2937' : '#FFFFFF',
                         color: isDarkMode ? '#F3F4F6' : '#000000'
@@ -76,9 +77,9 @@ export default function TopUsersLeaderboard() {
         };
 
         fetchTopUsers();
-    }, []); // Dependency array rỗng
+    }, []); // Empty dependency array
 
-    // Tách hàm hiển thị thông báo lỗi để có thể sử dụng isDarkMode mới nhất
+    // Helper function to display error alert
     const showErrorAlert = () => {
         Swal.fire({
             title: 'Error!',
@@ -91,10 +92,12 @@ export default function TopUsersLeaderboard() {
         });
     };
 
+    // Helper function for time formatting
     const formatTime = (timeTaken: { minutes: number, seconds: number }) => {
         return `${timeTaken.minutes}m ${timeTaken.seconds}s`;
     };
 
+    // Helper function for date formatting
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -103,6 +106,7 @@ export default function TopUsersLeaderboard() {
         });
     };
 
+    // Animation variants
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -150,10 +154,12 @@ export default function TopUsersLeaderboard() {
         }
     };
 
+    // Helper function for theme-based classes
     const getThemeClass = (darkClass: string, lightClass: string) => {
         return isDarkMode ? darkClass : lightClass;
     };
 
+    // Loading state component
     if (loading) {
         return (
             <motion.div
@@ -162,11 +168,12 @@ export default function TopUsersLeaderboard() {
                 className={`text-center p-6 ${getThemeClass('bg-gray-800', 'bg-white')} rounded-xl shadow-lg flex flex-col items-center justify-center h-64`}
             >
                 <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-blue-600 font-medium">Đang tải thông tin bảng xếp hạng....</p>
+                <p className="text-blue-600 font-medium">Loading leaderboard information...</p>
             </motion.div>
         );
     }
 
+    // Error state component
     if (error) {
         return (
             <motion.div
@@ -186,6 +193,7 @@ export default function TopUsersLeaderboard() {
         );
     }
 
+    // Main component render
     return (
         <motion.div
             key={`container-${isDarkMode ? 'dark' : 'light'}`}
@@ -194,13 +202,14 @@ export default function TopUsersLeaderboard() {
             variants={containerVariants}
             className={`p-5 md:p-6 h-full max-w-full overflow-hidden`}
         >
+            {/* Header section with title and tips */}
             <motion.div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                 <motion.h2
                     variants={itemVariants}
                     className="text-2xl font-bold flex items-center"
                 >
                     <span className="mr-2 text-yellow-500">🏆</span>
-                    <span className={getThemeClass('text-white', 'text-gray-800')}>Bảng xếp hạng</span>
+                    <span className={getThemeClass('text-white', 'text-gray-800')}>Leaderboard</span>
                 </motion.h2>
 
                 <motion.div
@@ -211,16 +220,17 @@ export default function TopUsersLeaderboard() {
                     )} md:max-w-md text-sm`}
                 >
                     <div className={`flex items-center mb-2 font-semibold ${getThemeClass('text-white', 'text-blue-800')}`}>
-                        <span className="mr-2">💡</span> Mẹo cho bài Test
+                        <span className="mr-2">💡</span> Test Tips
                     </div>
                     <ul className={`space-y-1 pl-5 list-disc ${getThemeClass('text-gray-100', 'text-blue-700')}`}>
-                        <li>Hãy đảm bảo bạn có thể dành ra ít nhất 45 phút cho bài kiểm tra</li>
-                        <li>Đọc kĩ câu hỏi và chọn câu trả lời chính xác</li>
-                        <li>Bạn sẽ nhận được kết quả và đáp án ngay sau khi hoàn thành bài kiểm tra</li>
+                        <li>Make sure you can set aside at least 45 minutes for the test</li>
+                        <li>Read questions carefully and choose the correct answers</li>
+                        <li>You'll receive results and answers immediately after completing the test</li>
                     </ul>
                 </motion.div>
             </motion.div>
 
+            {/* Table section with leaderboard data */}
             <div className="overflow-x-auto -mx-5 px-5">
                 {topUsers.length === 0 ? (
                     <motion.div
@@ -229,7 +239,7 @@ export default function TopUsersLeaderboard() {
                         className={`text-center ${getThemeClass('text-gray-400', 'text-gray-500')} py-12 rounded-lg border ${getThemeClass('border-gray-700', 'border-gray-200')}`}
                     >
                         <div className="text-4xl mb-3">📊</div>
-                        <p className={`text-lg font-medium ${getThemeClass('text-gray-300', 'text-gray-700')}`}>Kh</p>
+                        <p className={`text-lg font-medium ${getThemeClass('text-gray-300', 'text-gray-700')}`}>No data available yet</p>
                         <p className={`text-sm mt-2 max-w-md mx-auto ${getThemeClass('text-gray-400', 'text-gray-500')}`}>Be the first to complete the test and claim the top spot on the leaderboard!</p>
                     </motion.div>
                 ) : (
@@ -251,11 +261,11 @@ export default function TopUsersLeaderboard() {
                             <table className={`min-w-full relative z-10 ${getThemeClass('bg-gray-800', 'bg-white')}`}>
                                 <motion.thead variants={tableHeaderVariants}>
                                     <tr className={`${getThemeClass('bg-blue-900/70 text-blue-100', 'bg-blue-50 text-blue-800')}`}>
-                                        <th className="py-3 px-3 md:px-4 text-left font-semibold">Hạng</th>
-                                        <th className="py-3 px-3 md:px-4 text-left font-semibold">Tên</th>
-                                        <th className="py-3 px-3 md:px-4 text-right font-semibold">Điểm</th>
-                                        <th className="py-3 px-3 md:px-4 text-right font-semibold sm:table-cell">Thời gian</th>
-                                        <th className="py-3 px-3 md:px-4 text-right font-semibold sm:table-cell">Ngày</th>
+                                        <th className="py-3 px-3 md:px-4 text-left font-semibold">Rank</th>
+                                        <th className="py-3 px-3 md:px-4 text-left font-semibold">Name</th>
+                                        <th className="py-3 px-3 md:px-4 text-right font-semibold">Score</th>
+                                        <th className="py-3 px-3 md:px-4 text-right font-semibold sm:table-cell">Time</th>
+                                        <th className="py-3 px-3 md:px-4 text-right font-semibold sm:table-cell">Date</th>
                                     </tr>
                                 </motion.thead>
                                 <motion.tbody>

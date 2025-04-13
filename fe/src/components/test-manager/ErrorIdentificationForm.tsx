@@ -8,7 +8,6 @@ interface ErrorIdentificationFormProps {
     handleQuestionTextChange: (value: string) => void;
     handleOptionChange: (index: number, value: string) => void;
     handleCorrectAnswerChange: (value: string) => void;
-    handleErrorIdentificationChange: (index: number, startIdx: number, endIdx: number) => void;
 }
 
 export const ErrorIdentificationForm: React.FC<ErrorIdentificationFormProps> = ({
@@ -17,8 +16,7 @@ export const ErrorIdentificationForm: React.FC<ErrorIdentificationFormProps> = (
     handleIdChange,
     handleQuestionTextChange,
     handleOptionChange,
-    handleCorrectAnswerChange,
-    handleErrorIdentificationChange
+    handleCorrectAnswerChange
 }) => {
     return (
         <div className="space-y-4">
@@ -75,49 +73,8 @@ export const ErrorIdentificationForm: React.FC<ErrorIdentificationFormProps> = (
                             type="text"
                             value={option.text}
                             onChange={(e) => handleOptionChange(idx, e.target.value)}
-                            className="w-full p-2 border rounded-md mb-2 mt-1"
+                            className="w-full p-2 border rounded-md mt-1"
                         />
-
-                        <div className="grid grid-cols-2 gap-2 mt-1">
-                            <div>
-                                <label htmlFor={`start-idx-${idx}`} className="block text-sm font-medium">Section Start Index</label>
-                                <input
-                                    id={`start-idx-${idx}`}
-                                    type="number"
-                                    value={(editedQuestion.underlinedIndexes?.[idx]?.[0]) || 0}
-                                    onChange={(e) => {
-                                        const startIdx = parseInt(e.target.value);
-                                        const endIdx = (editedQuestion.underlinedIndexes?.[idx]?.[1]) || 0;
-                                        handleErrorIdentificationChange(idx, startIdx, endIdx);
-                                    }}
-                                    className="w-full p-2 border rounded-md"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor={`end-idx-${idx}`} className="block text-sm font-medium">Section End Index</label>
-                                <input
-                                    id={`end-idx-${idx}`}
-                                    type="number"
-                                    value={(editedQuestion.underlinedIndexes?.[idx]?.[1]) || 0}
-                                    onChange={(e) => {
-                                        const startIdx = (editedQuestion.underlinedIndexes?.[idx]?.[0]) || 0;
-                                        const endIdx = parseInt(e.target.value);
-                                        handleErrorIdentificationChange(idx, startIdx, endIdx);
-                                    }}
-                                    className="w-full p-2 border rounded-md"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mt-2">
-                            <label className="block text-sm font-medium">Section Preview</label>
-                            <span className="inline-block mt-1 px-2 py-1 border rounded-md text-sm">
-                                {editedQuestion.questionText.substring(
-                                    (editedQuestion.underlinedIndexes?.[idx]?.[0]) || 0,
-                                    (editedQuestion.underlinedIndexes?.[idx]?.[1]) || 0
-                                )}
-                            </span>
-                        </div>
                     </div>
                 ))}
             </div>

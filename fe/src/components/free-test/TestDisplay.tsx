@@ -71,8 +71,8 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
             try {
                 setLoading(true);
                 Swal.fire({
-                    title: 'Đang tải bài kiểm tra',
-                    html: 'Vui lòng đợi trong giây lát...',
+                    title: 'Test loading...',
+                    html: 'Please wait...',
                     didOpen: () => {
                         Swal.showLoading();
                     },
@@ -109,8 +109,8 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Lỗi',
-                    text: 'Không thể tải bài kiểm tra. Vui lòng thử lại sau.',
-                    confirmButtonText: 'Về trang chủ',
+                    text: 'Cannot load test. Please try again later.',
+                    confirmButtonText: 'Back to home',
                     confirmButtonColor: '#3085d6'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -131,14 +131,14 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
         // Confirmation dialog
         if (!isSubmitted) {
             const result = await Swal.fire({
-                title: 'Nộp bài?',
-                text: "Bạn có chắc chắn muốn nộp bài không?",
+                title: 'Submit Test?',
+                text: "Are you sure you want to submit the test?",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Nộp bài',
-                cancelButtonText: 'Quay lại làm bài'
+                confirmButtonText: 'Submit',
+                cancelButtonText: 'Back to test'
             });
 
             if (!result.isConfirmed) {
@@ -150,8 +150,8 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
 
         try {
             Swal.fire({
-                title: 'Đang xử lý',
-                html: 'Vui lòng đợi trong giây lát...',
+                title: 'Processing...',
+                html: 'Please wait...',
                 didOpen: () => {
                     Swal.showLoading();
                 },
@@ -170,25 +170,25 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             Swal.fire({
-                title: 'Hoàn thành!',
+                title: 'Done!',
                 html: `<div class="text-center">
-                        <p class="text-xl mb-3">Điểm của bạn: <span class="font-bold text-blue-600">${finalScore}/${test.questions.length}</span></p>
-                        <p class="text-lg">Tỷ lệ đúng: <span class="font-bold text-blue-600">${Math.round((finalScore / test.questions.length) * 100)}%</span></p>
+                        <p class="text-xl mb-3">Your score: <span class="font-bold text-blue-600">${finalScore}/${test.questions.length}</span></p>
+                        <p class="text-lg">Correct: <span class="font-bold text-blue-600">${Math.round((finalScore / test.questions.length) * 100)}%</span></p>
                       </div>`,
                 icon: 'success',
-                confirmButtonText: 'Xem chi tiết',
+                confirmButtonText: 'Detail',
                 confirmButtonColor: '#3085d6',
             });
 
         } catch (err) {
-            setError('Lỗi khi lưu kết quả. Vui lòng thử lại.');
-            console.error('Lỗi khi lưu kết quả:', err);
+            setError('An error occurred while saving the test result.');
+            console.error('Saving the test result error: ', err);
 
             Swal.fire({
                 icon: 'error',
-                title: 'Lỗi',
-                text: 'Không thể lưu kết quả. Vui lòng thử lại.',
-                confirmButtonText: 'Thử lại',
+                title: 'Error',
+                text: 'An error occurred while saving the test result. Please try again later.',
+                confirmButtonText: 'Try again',
                 confirmButtonColor: '#3085d6'
             });
         }
@@ -207,8 +207,8 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                 if (prevTime === 300) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Chú ý!',
-                        text: 'Còn 5 phút nữa là hết giờ!',
+                        title: 'Warning',
+                        text: 'You have 5 minutes left to submit the test.',
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
@@ -230,8 +230,8 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
             [questionId]: answer,
         }));
         Swal.fire({
-            title: 'Đã lưu',
-            text: 'Đã ghi nhận câu trả lời của bạn',
+            title: 'Saved',
+            text: 'Your answer has been saved.',
             toast: true,
             position: 'bottom-end',
             icon: 'success',
@@ -458,7 +458,7 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                             <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            Đúng!
+                            Correct!
                         </span>
                     </motion.div>
                 );
@@ -475,7 +475,7 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                         <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        Sai! Đáp án: {correctAnswers[question.id]}
+                        Wrong, answer: {correctAnswers[question.id]}
                     </span>
                 </motion.div>
             );
@@ -504,10 +504,7 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                         <span className="bg-blue-100 text-blue-800 font-bold rounded-full w-8 h-8 flex items-center justify-center mr-3 shrink-0">
                             {index + 1}
                         </span>
-                        {question.type === 'error_identification'
-                            ? renderErrorIdentificationText(question.questionText, question.underlinedIndexes)
-                            : question.questionText
-                        }
+                        {question.questionText}
                     </h3>
                     <div className="space-y-3 pl-11">
                         {renderOptions(question, question.options)}
@@ -583,8 +580,8 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                                                 transition={{ duration: 0.3 }}
                                             >
                                                 {isCorrect
-                                                    ? 'Đúng! Bạn đã chọn đáp án chính xác.'
-                                                    : `Sai! Đáp án đúng là: ${correctAnswers[question.id]}`
+                                                    ? 'Correct!'
+                                                    : `Wrong! The correct answer: ${correctAnswers[question.id]}`
                                                 }
                                             </motion.div>
                                         )}
@@ -776,7 +773,7 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
                     <div>
-                        <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Câu hỏi đã trả lời</div>
+                        <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Answered questions</div>
                         <div className={`text-lg font-bold ${isDarkMode ? 'text-gray-200' : ''}`}>{answeredQuestions}/{totalQuestions}</div>
                     </div>
                 </div>
@@ -795,7 +792,7 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <div>
-                        <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Thời gian còn lại</div>
+                        <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Time remaining</div>
                         <div className={`text-lg font-bold ${isDarkMode ? 'text-gray-200' : ''}`}>{formatTime(timeRemaining)}</div>
                     </div>
                 </div>
@@ -818,25 +815,25 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Kết quả bài kiểm tra</h2>
+                <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Test Result</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className={`rounded-lg p-4 border ${isDarkMode ? 'bg-blue-900 border-blue-800' : 'bg-blue-50 border-blue-100'
                         }`}>
-                        <div className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-blue-300' : 'text-blue-500'}`}>Tổng điểm</div>
+                        <div className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-blue-300' : 'text-blue-500'}`}>Score</div>
                         <div className={`text-2xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>{score}/{totalQuestions}</div>
                     </div>
 
                     <div className={`rounded-lg p-4 border ${isDarkMode ? 'bg-green-900 border-green-800' : 'bg-green-50 border-green-100'
                         }`}>
-                        <div className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-green-300' : 'text-green-500'}`}>Tỉ lệ đúng</div>
+                        <div className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-green-300' : 'text-green-500'}`}>Correct</div>
                         <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>{scorePercentage}%</div>
                     </div>
 
                     <div className={`rounded-lg p-4 border ${isDarkMode ? 'bg-purple-900 border-purple-800' : 'bg-purple-50 border-purple-100'
                         }`}>
-                        <div className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-purple-300' : 'text-purple-500'}`}>Thời gian làm bài</div>
-                        <div className={`text-2xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>{timeTaken.minutes} phút {timeTaken.seconds} giây</div>
+                        <div className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-purple-300' : 'text-purple-500'}`}>Time taken</div>
+                        <div className={`text-2xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>{timeTaken.minutes} m {timeTaken.seconds} s</div>
                     </div>
                 </div>
             </motion.div>
@@ -869,13 +866,13 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
     if (!test) {
         return (
             <div className="bg-yellow-50 p-4 rounded-lg text-yellow-700 border border-yellow-200">
-                <h3 className="font-bold mb-2">Không tìm thấy bài kiểm tra</h3>
-                <p>Không thể tải thông tin bài kiểm tra. Vui lòng thử lại sau.</p>
+                <h3 className="font-bold mb-2">Cannot find the free test</h3>
+                <p>Cannot fetch free test information. Please try again later.</p>
                 <button
                     onClick={() => router.push('/')}
                     className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
                 >
-                    Quay về trang chủ
+                    Back to home
                 </button>
             </div>
         );
@@ -892,7 +889,7 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                 >
                     <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>{test?.title}</h1>
                     {!isSubmitted && (
-                        <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600' + ' mt-1'}>Hãy hoàn thành tất cả câu hỏi trong thời gian quy định</p>
+                        <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600' + ' mt-1'}>Complete all questions within the time limit.</p>
                     )}
                 </motion.div>
             </div>
@@ -931,14 +928,14 @@ export default function TestDisplay({ testId, userEmail }: TestDisplayProps) {
                                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Nộp bài
+                                Submit
                             </>
                         ) : (
                             <>
                                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                 </svg>
-                                Nộp bài ({Object.keys(currentAnswers).length}/{test.questions.length} câu)
+                                Submit ({Object.keys(currentAnswers).length}/{test.questions.length} câu)
                             </>
                         )}
                     </motion.button>

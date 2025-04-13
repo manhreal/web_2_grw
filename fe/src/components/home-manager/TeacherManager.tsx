@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Teacher } from './types';
 import { Edit, Trash, Plus } from 'lucide-react';
 import { showSuccessToast } from '../../components/common/notifications/SuccessToast';
@@ -9,41 +10,54 @@ import { createTeacher, updateTeacher, deleteTeacher, uploadTeacherImage } from 
 import { SERVER_URL } from '@/api/server_url';
 import Image from 'next/image';
 
+// Interface definitions
 interface TeacherManagerProps {
     teachers: Teacher[];
     setTeachers: (teachers: Teacher[]) => void;
 }
 
 export default function TeacherManager({ teachers, setTeachers }: TeacherManagerProps) {
+    // Memoize the sorted teachers to avoid unnecessary re-sorting
+    const sortedTeachers = useMemo(() => {
+        return [...teachers].sort((a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+    }, [teachers]);
+
+    // Utility functions
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('vi-VN');
+        return new Date(dateString).toLocaleDateString('en-US');
     };
 
+    // Image upload handler
     const handleImageUpload = async (file: File) => {
         try {
             const response = await uploadTeacherImage(file);
             if (!response.imageUrl) {
-                throw new Error('Không nhận được URL ảnh từ server');
+                throw new Error('No image URL received from server');
             }
             return response.imageUrl.startsWith('http')
                 ? response.imageUrl
                 : `${SERVER_URL}${response.imageUrl}`;
         } catch (error) {
             console.error('Upload error:', error);
-            throw new Error(error.message || 'Upload ảnh thất bại');
+            throw new Error(error.message || 'Image upload failed');
         }
     };
 
+    // Form submission handler
     const handleSubmitTeacher = async (formData: unknown, teacher: Teacher | null) => {
         try {
             if (teacher) {
+                // Update existing teacher
                 const updatedTeacher = await updateTeacher(teacher._id, formData);
                 setTeachers(teachers.map(t => t._id === teacher._id ? updatedTeacher.data : t));
-                showSuccessToast({ message: 'Đã cập nhật thông tin giáo viên' });
+                showSuccessToast({ message: 'Teacher updated successfully' });
             } else {
+                // Create new teacher
                 const newTeacher = await createTeacher(formData);
                 setTeachers([...teachers, newTeacher.data]);
-                showSuccessToast({ message: 'Đã thêm giáo viên mới' });
+                showSuccessToast({ message: 'New teacher added successfully' });
             }
         } catch (error) {
             showSuccessToast({
@@ -53,6 +67,7 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
         }
     };
 
+    // Delete handler
     const handleDelete = async (teacher: Teacher) => {
         confirmDelete({
             itemName: teacher.name,
@@ -60,7 +75,7 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
                 try {
                     await deleteTeacher(teacher._id);
                     setTeachers(teachers.filter(t => t._id !== teacher._id));
-                    showSuccessToast({ message: 'Đã xóa giáo viên' });
+                    showSuccessToast({ message: 'Teacher deleted successfully' });
                 } catch (error) {
                     showSuccessToast({
                         message: error.message,
@@ -71,20 +86,21 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
         });
     };
 
+    // Teacher form handler
     const openTeacherForm = (teacher: Teacher | null) => {
         openFormModal({
-            title: teacher ? 'Cập nhật giáo viên' : 'Thêm giáo viên mới',
+            title: teacher ? 'Update Teacher' : 'Add New Teacher',
             fields: [
                 {
                     id: 'image',
-                    label: 'Ảnh đại diện',
+                    label: 'Profile Image',
                     type: 'image',
                     defaultValue: teacher?.image,
                     required: true
                 },
                 {
                     id: 'name',
-                    label: 'Tên giáo viên',
+                    label: 'Teacher Name',
                     type: 'text',
                     defaultValue: teacher?.name,
                     required: true,
@@ -92,7 +108,7 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
                 },
                 {
                     id: 'experience',
-                    label: 'Kinh nghiệm',
+                    label: 'Experience',
                     type: 'textarea',
                     defaultValue: teacher?.experience,
                     required: true,
@@ -100,7 +116,7 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
                 },
                 {
                     id: 'graduate',
-                    label: 'Tốt nghiệp',
+                    label: 'Education',
                     type: 'textarea',
                     defaultValue: teacher?.graduate,
                     required: true,
@@ -108,7 +124,7 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
                 },
                 {
                     id: 'achievements',
-                    label: 'Thành tích',
+                    label: 'Achievements',
                     type: 'textarea',
                     defaultValue: teacher?.achievements,
                     required: true,
@@ -120,40 +136,45 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
         });
     };
 
+    // Render component
     return (
         <div className="bg-white rounded-lg shadow p-6">
+            {/* Header section */}
             <div className="flex justify-between items-center mb-4">
                 <div>
-                    <h2 className="text-xl font-semibold">Danh sách giáo viên</h2>
-                    <p className="text-gray-500 text-sm">Quản lý danh sách giáo viên xuất hiện trên trang chủ</p>
+                    <h2 className="text-xl font-semibold">Teacher List</h2>
+                    <p className="text-gray-500 text-sm">Manage teachers displayed on the homepage</p>
                 </div>
                 <button
                     className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center hover:bg-blue-700"
                     onClick={() => openTeacherForm(null)}
+                    aria-label="Add new teacher"
                 >
-                    <Plus className="mr-2 h-4 w-4" /> Thêm giáo viên
+                    <Plus className="mr-2 h-4 w-4" /> Add Teacher
                 </button>
             </div>
+
+            {/* Table section */}
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kinh nghiệm</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Experience</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {teachers.length === 0 ? (
+                        {sortedTeachers.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="text-center py-6 italic text-gray-500">
-                                    Chưa có dữ liệu
+                                    No data available
                                 </td>
                             </tr>
                         ) : (
-                            teachers.map((teacher) => (
+                            sortedTeachers.map((teacher) => (
                                 <tr key={teacher._id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <Image
@@ -162,24 +183,33 @@ export default function TeacherManager({ teachers, setTeachers }: TeacherManager
                                             width={40}
                                             height={40}
                                             className="object-cover rounded"
+                                            onError={(e) => {
+                                                // Fallback for image loading errors
+                                                const target = e.target as HTMLImageElement;
+                                                target.src = '/default-image.png';
+                                            }}
                                             placeholder="blur"
                                             blurDataURL="/default-image.png"
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">{teacher.name}</td>
-                                    <td className="px-6 py-4 max-w-xs truncate">{teacher.experience}</td>
+                                    <td className="px-6 py-4 max-w-xs truncate" title={teacher.experience}>
+                                        {teacher.experience}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap">{formatDate(teacher.createdAt)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="flex justify-end space-x-2">
                                             <button
                                                 className="p-1 border border-gray-300 rounded-md hover:bg-gray-100"
                                                 onClick={() => openTeacherForm(teacher)}
+                                                aria-label="Edit teacher"
                                             >
                                                 <Edit className="h-4 w-4" />
                                             </button>
                                             <button
                                                 className="p-1 border border-red-300 text-red-600 rounded-md hover:bg-red-50"
                                                 onClick={() => handleDelete(teacher)}
+                                                aria-label="Delete teacher"
                                             >
                                                 <Trash className="h-4 w-4" />
                                             </button>

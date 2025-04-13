@@ -2,6 +2,7 @@
 
 import TestFree from '../models/testFree.js';
 import mongoose from 'mongoose';
+import { clearTestCache } from '../middlewares/cache.js';
 
 export const getFreeTestById = async (req, res) => {
     try {
@@ -88,7 +89,7 @@ export const updateQuestionInFreeTest = async (req, res) => {
         test.questions[questionIndex] = updatedQuestionData;
         const options = { runValidators: true, context: 'query' };
         await test.save(options);
-
+        clearTestCache(id);
         return res.status(200).json({
             message: 'Question updated successfully',
             updatedQuestion: updatedQuestionData
@@ -146,7 +147,7 @@ export const addQuestionToFreeTest = async (req, res) => {
         // Save the updated test document
         const options = { runValidators: true, context: 'query' };
         await test.save(options);
-
+        clearTestCache(id);
         return res.status(201).json({
             message: 'Question added successfully',
             addedQuestion: questionData
@@ -198,7 +199,7 @@ export const deleteQuestionFromFreeTest = async (req, res) => {
         // Save the updated test document
         const options = { runValidators: true, context: 'query' };
         await test.save(options);
-
+        clearTestCache(id);
         return res.status(200).json({
             message: 'Question deleted successfully',
             deletedQuestionId: questionId
@@ -248,7 +249,7 @@ export const updateFreeTestBasicInfo = async (req, res) => {
         // Save the updated test document
         const options = { runValidators: true, context: 'query' };
         await test.save(options);
-
+        clearTestCache(id);
         return res.status(200).json({
             message: 'Test information updated successfully',
             updatedTest: {

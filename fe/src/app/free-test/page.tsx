@@ -1,21 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { FreeTest, getFreeTest } from '@/api/testFree';
-import { registerUserTest, UserTest } from '@/api/userTest';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getFreeTest } from '@/api/testFree';
+import { registerUserTest } from '@/api/userTest';
 import TestDisplay from '@/components/free-test/TestDisplay';
 import UserTestInfo from '@/components/free-test/UserTestInfo';
 import { useTheme } from '@/context/ThemeContext';
 import { showSuccessToast } from '@/components/common/notifications/SuccessToast';
-import Swal from 'sweetalert2'; // Make sure to import SweetAlert
+import Swal from 'sweetalert2';
 
+// Main component
 export default function FreeTestPage() {
+    // State declarations
     const { isDarkMode } = useTheme();
-    const [test, setTest] = useState<FreeTest | null>(null);
+    const [test, setTest] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [userEmail, setUserEmail] = useState<string | null>(null);
-    const [userData, setUserData] = useState<UserTest>({
+    const [error, setError] = useState(null);
+    const [userEmail, setUserEmail] = useState(null);
+    const [userData, setUserData] = useState({
         fullName: '',
         email: '',
         phone: '',
@@ -23,6 +25,7 @@ export default function FreeTestPage() {
     });
     const [userRegistered, setUserRegistered] = useState(false);
 
+    // Load test data on component mount
     useEffect(() => {
         const loadTest = async () => {
             try {
@@ -42,15 +45,17 @@ export default function FreeTestPage() {
         loadTest();
     }, []);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // Input change handler
+    const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
         setUserData(prev => ({
             ...prev,
             [name]: value
         }));
-    };
+    }, []);
 
-    const handleRegistration = async (e: React.FormEvent) => {
+    // User registration handler
+    const handleRegistration = useCallback(async (e) => {
         e.preventDefault();
         try {
             if (!userData.fullName || !userData.email || !userData.phone) {
@@ -68,13 +73,13 @@ export default function FreeTestPage() {
             showSuccessToast({ message: 'Registration successful!' });
         } catch (err) {
             // Check if the error contains the rate limit message
-            if (err.message && err.message.includes('Quá nhiều yêu cầu đến')) {
+            if (err.message && err.message.includes('Too many requests')) {
                 // Use SweetAlert for rate limit errors
                 Swal.fire({
-                    title: 'Giới hạn yêu cầu',
-                    text: 'Quá nhiều yêu cầu đến. Vui lòng thử lại sau 1 phút.',
+                    title: 'Request Limit',
+                    text: 'Too many requests. Please try again after 1 minute.',
                     icon: 'warning',
-                    confirmButtonText: 'Đóng',
+                    confirmButtonText: 'Close',
                     confirmButtonColor: '#3085d6',
                     background: isDarkMode ? '#1a202c' : '#fff',
                     color: isDarkMode ? '#fff' : '#000'
@@ -89,16 +94,18 @@ export default function FreeTestPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [userData, isDarkMode]);
 
+    // Loading state render
     if (loading) {
         return (
-            <div className={`flex justify-center items-center min-h-screen`}>
+            <div className="flex justify-center items-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
+    // Error state render
     if (error) {
         return (
             <div className={`container mx-auto px-4 py-8 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white'}`}>
@@ -115,6 +122,7 @@ export default function FreeTestPage() {
         );
     }
 
+    // No test available state render
     if (!test) {
         return (
             <div className={`container mx-auto px-4 py-8 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white'}`}>
@@ -131,6 +139,7 @@ export default function FreeTestPage() {
         );
     }
 
+    // Main render - shows either registration form or test display
     return (
         <div className={`${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white'}`}>
             {!userRegistered ? (

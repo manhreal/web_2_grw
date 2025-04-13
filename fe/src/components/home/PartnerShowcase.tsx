@@ -5,6 +5,7 @@ import { SERVER_URL } from '@/api/server_url';
 import { useTheme } from '@/context/ThemeContext';
 import { motion } from 'framer-motion';
 
+// Type definition
 export interface Partner {
     _id: string;
     image: string;
@@ -12,12 +13,15 @@ export interface Partner {
     createdAt: string;
 }
 
+// Main component
 const PartnerShowcase: React.FC = () => {
+    // State declarations
     const { isDarkMode } = useTheme();
     const [partners, setPartners] = useState<Partner[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Data fetching effect
     useEffect(() => {
         const fetchPartners = async () => {
             try {
@@ -26,10 +30,10 @@ const PartnerShowcase: React.FC = () => {
                 if (response.success) {
                     setPartners(response.data);
                 } else {
-                    setError('Không thể tải dữ liệu đối tác');
+                    setError('Unable to load partner data');
                 }
             } catch (err) {
-                setError('Đã xảy ra lỗi khi tải dữ liệu đối tác');
+                setError('An error occurred while loading partner data');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -39,7 +43,7 @@ const PartnerShowcase: React.FC = () => {
         fetchPartners();
     }, []);
 
-    // Hàm xử lý URL ảnh
+    // Helper function for image URL handling
     const getImageUrl = (imagePath: string): string => {
         if (imagePath.startsWith('http')) {
             return imagePath;
@@ -48,6 +52,7 @@ const PartnerShowcase: React.FC = () => {
         return `${SERVER_URL}/${decodedPath.replace(/^\//, '')}`;
     };
 
+    // Loading state component
     if (loading) {
         return (
             <div className={`flex justify-center items-center h-64 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
@@ -56,13 +61,16 @@ const PartnerShowcase: React.FC = () => {
         );
     }
 
+    // Error state component
     if (error) {
         return <div className={`text-red-500 text-center py-10 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>{error}</div>;
     }
 
+    // Main render
     return (
-        <div className={`py-16 px-4 transition-colors duration-300 ${isDarkMode ? ' text-gray-100' : ' text-gray-800'}`}>
+        <div className={`py-16 px-4 transition-colors duration-300 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
             <div className="container mx-auto px-4 md:px-10">
+                {/* Section title */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -70,10 +78,11 @@ const PartnerShowcase: React.FC = () => {
                     className="text-center mb-12"
                 >
                     <h2 className={`text-3xl md:text-4xl font-bold py-2 mb-3 ${isDarkMode ? 'text-gradient-dark' : 'text-gradient-light'}`}>
-                        ĐỐI TÁC CỦA CHÚNG TÔI
+                        OUR PARTNERS
                     </h2>
                 </motion.div>
 
+                {/* Partners grid */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -86,7 +95,7 @@ const PartnerShowcase: React.FC = () => {
                             whileHover={{ y: -5, transition: { duration: 0.3 } }}
                             className="p-2 w-1/3"
                         >
-                            <div className={`relative h-24 w-full rounded-lg flex items-center justify-center p-4 shadow-md hover:shadow-lg transition-all duration-300`}>
+                            <div className="relative h-24 w-full rounded-lg flex items-center justify-center p-4 shadow-md hover:shadow-lg transition-all duration-300">
                                 <Image
                                     src={getImageUrl(partner.image)}
                                     alt={partner.name}
@@ -101,26 +110,26 @@ const PartnerShowcase: React.FC = () => {
                     ))}
                 </motion.div>
 
-                {/* Hiệu ứng phân tán cho các logo */}
+                {/* CSS styles */}
                 <style jsx global>{`
-                    .text-gradient-dark {
-                        background: linear-gradient(to right, #60a5fa, #a78bfa);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                    }
-                    
-                    .text-gradient-light {
-                        background: linear-gradient(to right, #2563eb, #7c3aed);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                    }
+          .text-gradient-dark {
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+          
+          .text-gradient-light {
+            background: linear-gradient(to right, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
 
-                    @media (max-width: 640px) {
-                        .flex-wrap {
-                            gap: 0.5rem;
-                        }
-                    }
-                `}</style>
+          @media (max-width: 640px) {
+            .flex-wrap {
+              gap: 0.5rem;
+            }
+          }
+        `}</style>
             </div>
         </div>
     );

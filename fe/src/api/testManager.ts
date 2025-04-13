@@ -45,6 +45,7 @@ const getRequestHeaders = () => {
 
 // Function to add a question to a test
 export async function addQuestion(testId: string, question: Question): Promise<unknown> {
+    console.log('Adding question:', question);
     const response = await fetch(`${SERVER_URL}/testFree/${testId}/questions`, {
         method: 'POST',
         headers: getRequestHeaders(),
@@ -63,6 +64,7 @@ export async function addQuestion(testId: string, question: Question): Promise<u
 
 // Function to update a question
 export async function updateQuestion(testId: string, questionId: string, question: Question): Promise<unknown> {
+    console.log('Updating question:', question);
     const response = await fetch(`${SERVER_URL}/testFree/${testId}/questions/${questionId}`, {
         method: 'PUT',
         headers: getRequestHeaders(),
@@ -81,6 +83,7 @@ export async function updateQuestion(testId: string, questionId: string, questio
 
 // Function to delete a question
 export async function deleteQuestion(testId: string, questionId: string): Promise<unknown> {
+    console.log('Deleting question with ID:', questionId);
     const response = await fetch(`${SERVER_URL}/testFree/${testId}/questions/${questionId}`, {
         method: 'DELETE',
         headers: getRequestHeaders(),

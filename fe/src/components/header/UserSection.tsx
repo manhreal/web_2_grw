@@ -47,11 +47,11 @@ export const UserSection: React.FC<UserSectionProps> = ({
 
     const initiateGoogleLogin = () => {
         Swal.fire({
-            title: 'Xác minh bạn không phải robot',
+            title: 'Confirm you are not a robot',
             html: '<div id="recaptcha-container" class="flex justify-center"></div>',
             showConfirmButton: false,
             showCancelButton: true,
-            cancelButtonText: 'Huỷ',
+            cancelButtonText: 'Cancel',
             cancelButtonColor: '#d33',
             allowOutsideClick: false,
             didOpen: () => {
@@ -94,10 +94,10 @@ export const UserSection: React.FC<UserSectionProps> = ({
         // Verify reCAPTCHA first
         if (!token) {
             Swal.fire({
-                title: 'Xác thực!',
-                text: 'Vui lòng xác thực reCAPTCHA trước khi đăng nhập',
+                title: 'Verify reCAPTCHA !',
+                text: 'Please verify reCAPTCHA before logging in.',
                 icon: 'warning',
-                confirmButtonText: 'Đồng ý',
+                confirmButtonText: 'OK',
                 confirmButtonColor: '#3085d6'
             });
             return;
@@ -116,9 +116,8 @@ export const UserSection: React.FC<UserSectionProps> = ({
                     photoURL: googleUser.photoURL || undefined
                 });
 
-                // Thông báo đăng nhập thành công
                 Swal.fire({
-                    title: 'Đăng nhập thành công!',
+                    title: 'Login successful!',
                     icon: 'success',
                     timer: 1500,
                     showConfirmButton: false
@@ -127,27 +126,25 @@ export const UserSection: React.FC<UserSectionProps> = ({
             setCaptchaToken(null);
         } catch (error: unknown) {
             console.error('Google login error:', error);
-
-            // Ép kiểu để dùng được `message` và `response`
             const err = error as { message?: string; response?: { status?: number } };
 
             if (
-                err.message?.includes('Bạn đã đăng nhập quá nhiều lần trong thời gian ngắn. Vui lòng thử lại sau 1 phút.') ||
+                err.message?.includes('You have exceeded the maximum number of login attempts. Please try again after 1 minute.') ||
                 err.response?.status === 429
             ) {
                 Swal.fire({
-                    title: 'Đăng nhập bị giới hạn!',
-                    text: 'Bạn đã đăng nhập quá nhiều lần trong thời gian ngắn. Vui lòng thử lại sau 1 phút.',
+                    title: 'Login Limit Exceeded',
+                    text: 'You have exceeded the maximum number of login attempts. Please try again after 1 minute.',
                     icon: 'error',
-                    confirmButtonText: 'Đồng ý',
+                    confirmButtonText: 'OK',
                     confirmButtonColor: '#d33',
                 });
             } else {
                 Swal.fire({
-                    title: 'Lỗi đăng nhập!',
-                    text: 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau.',
+                    title: 'Login Error',
+                    text: 'An error occurred during login. Please try again.',
                     icon: 'error',
-                    confirmButtonText: 'Đồng ý',
+                    confirmButtonText: 'OK',
                     confirmButtonColor: '#d33',
                 });
             }
@@ -175,10 +172,10 @@ export const UserSection: React.FC<UserSectionProps> = ({
         } catch (error) {
             console.error('Logout error', error);
             Swal.fire({
-                title: 'Lỗi đăng xuất!',
-                text: 'Đã xảy ra lỗi khi đăng xuất. Vui lòng thử lại sau.',
+                title: 'Logout Error',
+                text: 'An error occurred during logout. Please try again.',
                 icon: 'error',
-                confirmButtonText: 'Đồng ý',
+                confirmButtonText: 'OK',
                 confirmButtonColor: '#d33'
             });
         }
@@ -237,13 +234,13 @@ export const UserSection: React.FC<UserSectionProps> = ({
                         href="/profile"
                         className={`flex-1 py-2 text-center ${isDarkMode ? "bg-blue-900/30 text-blue-300 hover:bg-blue-900/50" : "bg-blue-50 text-blue-600 hover:bg-blue-100"} rounded-md transition-colors`}
                     >
-                        Hồ sơ
+                        Profile
                     </Link>
                     <button
                         onClick={handleLogout}
                         className={`flex-1 py-2 text-center ${isDarkMode ? "bg-red-900/30 text-red-300 hover:bg-red-900/50" : "bg-red-50 text-red-600 hover:bg-red-100"} rounded-md transition-colors`}
                     >
-                        Đăng xuất
+                        Log Out
                     </button>
                 </div>
             </div>
@@ -261,7 +258,7 @@ export const UserSection: React.FC<UserSectionProps> = ({
                             onClick={() => setShowRecaptcha(false)}
                             className="mt-2 px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
                         >
-                            Huỷ
+                            Cancel
                         </button>
                     </div>
                 ) : (
@@ -270,7 +267,7 @@ export const UserSection: React.FC<UserSectionProps> = ({
                         className="block w-full py-3 px-4 rounded-md bg-white border border-gray-300 shadow-sm hover:shadow-md text-gray-700 font-medium transition-all flex items-center justify-center"
                     >
                         <GoogleLogo />
-                        Đăng nhập với Google
+                        Login with Google
                     </button>
                 )}
             </div>
@@ -309,17 +306,17 @@ export const UserSection: React.FC<UserSectionProps> = ({
                         onClick={() => setShowRecaptcha(false)}
                         className="mt-2 px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
                     >
-                        Huỷ
+                        Cancel
                     </button>
                 </div>
             ) : (
                 <button
                     onClick={initiateGoogleLogin}
                     className="px-4 py-2 rounded-md bg-white border border-gray-300 shadow-sm hover:shadow-md text-gray-700 font-medium transition-all flex items-center justify-center"
-                    aria-label="Đăng nhập với Google"
+                    aria-label="Login with Google"
                 >
                     <GoogleLogo />
-                    <span>Đăng nhập</span>
+                    <span>Login</span>
                 </button>
             )}
         </div>
@@ -358,24 +355,14 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
                     onClick={() => setIsDropdownOpen(false)}
                 >
                     <UserCircle size={20} className={`mr-3 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`} />
-                    <span>Hồ sơ của tôi</span>
+                    <span>Profile</span>
                 </Link>
-
-                <Link
-                    href="/settings"
-                    className={`flex items-center px-4 py-3 ${isDarkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"} transition-colors`}
-                    onClick={() => setIsDropdownOpen(false)}
-                >
-                    <Settings size={20} className={`mr-3 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`} />
-                    <span>Cài đặt</span>
-                </Link>
-
                 <button
                     onClick={handleLogout}
                     className={`flex items-center w-full px-4 py-3 text-left ${isDarkMode ? "hover:bg-gray-800 text-red-400" : "hover:bg-gray-100 text-red-600"} transition-colors`}
                 >
                     <LogOut size={20} className="mr-3" />
-                    <span>Đăng xuất</span>
+                    <span>Log Out</span>
                 </button>
             </div>
         </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Partner } from './types';
 import { Edit, Trash, Plus } from 'lucide-react';
 import { showSuccessToast } from '../../components/common/notifications/SuccessToast';
@@ -9,41 +10,54 @@ import { createPartner, updatePartner, deletePartner, uploadPartnerImage } from 
 import { SERVER_URL } from '@/api/server_url';
 import Image from 'next/image';
 
+// Interface definitions
 interface PartnerManagerProps {
     partners: Partner[];
     setPartners: (partners: Partner[]) => void;
 }
 
 export default function PartnerManager({ partners, setPartners }: PartnerManagerProps) {
+    // Memoize the sorted partners to avoid unnecessary re-sorting
+    const sortedPartners = useMemo(() => {
+        return [...partners].sort((a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+    }, [partners]);
+
+    // Utility functions
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('vi-VN');
+        return new Date(dateString).toLocaleDateString('en-US');
     };
 
+    // Image upload handler
     const handleImageUpload = async (file: File) => {
         try {
             const response = await uploadPartnerImage(file);
             if (!response.imageUrl) {
-                throw new Error('Không nhận được URL ảnh từ server');
+                throw new Error('No image URL received from server');
             }
             return response.imageUrl.startsWith('http')
                 ? response.imageUrl
                 : `${SERVER_URL}${response.imageUrl}`;
         } catch (error) {
             console.error('Upload error:', error);
-            throw new Error(error.message || 'Upload ảnh thất bại');
+            throw new Error(error.message || 'Image upload failed');
         }
     };
 
+    // Form submission handler
     const handleSubmitPartner = async (formData: unknown, partner: Partner | null) => {
         try {
             if (partner) {
+                // Update existing partner
                 const updatedPartner = await updatePartner(partner._id, formData);
                 setPartners(partners.map(p => p._id === partner._id ? updatedPartner.data : p));
-                showSuccessToast({ message: 'Đã cập nhật thông tin đối tác' });
+                showSuccessToast({ message: 'Partner updated successfully' });
             } else {
+                // Create new partner
                 const newPartner = await createPartner(formData);
                 setPartners([...partners, newPartner.data]);
-                showSuccessToast({ message: 'Đã thêm đối tác mới' });
+                showSuccessToast({ message: 'New partner added successfully' });
             }
         } catch (error) {
             showSuccessToast({
@@ -53,6 +67,7 @@ export default function PartnerManager({ partners, setPartners }: PartnerManager
         }
     };
 
+    // Delete handler
     const handleDelete = async (partner: Partner) => {
         confirmDelete({
             itemName: partner.name,
@@ -60,7 +75,7 @@ export default function PartnerManager({ partners, setPartners }: PartnerManager
                 try {
                     await deletePartner(partner._id);
                     setPartners(partners.filter(p => p._id !== partner._id));
-                    showSuccessToast({ message: 'Đã xóa đối tác' });
+                    showSuccessToast({ message: 'Partner deleted successfully' });
                 } catch (error) {
                     showSuccessToast({
                         message: error.message,
@@ -71,20 +86,21 @@ export default function PartnerManager({ partners, setPartners }: PartnerManager
         });
     };
 
+    // Partner form handler
     const openPartnerForm = (partner: Partner | null) => {
         openFormModal({
-            title: partner ? 'Cập nhật đối tác' : 'Thêm đối tác mới',
+            title: partner ? 'Update Partner' : 'Add New Partner',
             fields: [
                 {
                     id: 'image',
-                    label: 'Ảnh đối tác',
+                    label: 'Partner Image',
                     type: 'image',
                     defaultValue: partner?.image,
                     required: true
                 },
                 {
                     id: 'name',
-                    label: 'Tên đối tác',
+                    label: 'Partner Name',
                     type: 'text',
                     defaultValue: partner?.name,
                     required: true,
@@ -96,39 +112,44 @@ export default function PartnerManager({ partners, setPartners }: PartnerManager
         });
     };
 
+    // Render component
     return (
         <div className="bg-white rounded-lg shadow p-6">
+            {/* Header section */}
             <div className="flex justify-between items-center mb-4">
                 <div>
-                    <h2 className="text-xl font-semibold">Danh sách đối tác</h2>
-                    <p className="text-gray-500 text-sm">Quản lý danh sách đối tác xuất hiện trên trang chủ</p>
+                    <h2 className="text-xl font-semibold">Partners</h2>
+                    <p className="text-gray-500 text-sm">Manage partners displayed on the homepage</p>
                 </div>
                 <button
                     className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center hover:bg-blue-700"
                     onClick={() => openPartnerForm(null)}
+                    aria-label="Add new partner"
                 >
-                    <Plus className="mr-2 h-4 w-4" /> Thêm đối tác
+                    <Plus className="mr-2 h-4 w-4" /> Add Partner
                 </button>
             </div>
+
+            {/* Table section */}
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {partners.length === 0 ? (
+                        {sortedPartners.length === 0 ? (
                             <tr>
                                 <td colSpan={4} className="text-center py-6 italic text-gray-500">
-                                    Chưa có dữ liệu
+                                    No data available
                                 </td>
                             </tr>
                         ) : (
-                            partners.map((partner) => (
+                            sortedPartners.map((partner) => (
                                 <tr key={partner._id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <Image
@@ -137,6 +158,11 @@ export default function PartnerManager({ partners, setPartners }: PartnerManager
                                             width={40}
                                             height={40}
                                             className="object-cover rounded"
+                                            onError={(e) => {
+                                                // Fallback for image loading errors
+                                                const target = e.target as HTMLImageElement;
+                                                target.src = '/default-image.png';
+                                            }}
                                             placeholder="blur"
                                             blurDataURL="/default-image.png"
                                         />
@@ -148,12 +174,14 @@ export default function PartnerManager({ partners, setPartners }: PartnerManager
                                             <button
                                                 className="p-1 border border-gray-300 rounded-md hover:bg-gray-100"
                                                 onClick={() => openPartnerForm(partner)}
+                                                aria-label="Edit partner"
                                             >
                                                 <Edit className="h-4 w-4" />
                                             </button>
                                             <button
                                                 className="p-1 border border-red-300 text-red-600 rounded-md hover:bg-red-50"
                                                 onClick={() => handleDelete(partner)}
+                                                aria-label="Delete partner"
                                             >
                                                 <Trash className="h-4 w-4" />
                                             </button>

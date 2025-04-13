@@ -9,24 +9,26 @@ import Link from 'next/link';
 import { CircleDollarSign, Clock, Pencil, Lightbulb } from 'lucide-react';
 import Image from 'next/image';
 
+// Main component for the Advise page
 export default function AdvisePage() {
+    // Theme context hook for dark/light mode
     const { isDarkMode } = useTheme();
 
-    // Animation controls for each section
+    // Animation controls for different sections
     const headerControls = useAnimation();
     const formSectionControls = useAnimation();
     const guideSectionControls = useAnimation();
     const faqSectionControls = useAnimation();
     const ctaSectionControls = useAnimation();
 
-    // Intersection observers for each section with improved thresholds for mobile
+    // Intersection observers with optimized thresholds
     const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
     const [formSectionRef, formSectionInView] = useInView({ threshold: 0.05, triggerOnce: true });
     const [, guideSectionInView] = useInView({ threshold: 0.05, triggerOnce: true });
     const [faqSectionRef, faqSectionInView] = useInView({ threshold: 0.05, triggerOnce: true });
     const [ctaSectionRef, ctaSectionInView] = useInView({ threshold: 0.1, triggerOnce: true });
 
-    // Trigger animations when sections come into view
+    // Animation trigger effect
     useEffect(() => {
         if (headerInView) headerControls.start('visible');
         if (formSectionInView) formSectionControls.start('visible');
@@ -41,7 +43,7 @@ export default function AdvisePage() {
         ctaSectionInView, ctaSectionControls
     ]);
 
-    // Enhanced animations with responsive timing
+    // Animation variants
     const fadeInLeft = {
         hidden: { opacity: 0, x: -30 },
         visible: {
@@ -91,35 +93,35 @@ export default function AdvisePage() {
         }
     };
 
-    // Updated color scheme for FAQs with more vibrant icons
+    // FAQ data with icons
     const faqs = [
         {
             icon: <CircleDollarSign className={`w-5 h-5 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-500'}`} />,
             image: "/images/courses/adv1.png",
-            question: "Tôi có phải trả phí để được tư vấn không?",
-            answer: "Không, dịch vụ tư vấn của chúng tôi hoàn toàn miễn phí. Bạn chỉ thanh toán học phí khi quyết định đăng ký khóa học."
+            question: "Do I need to pay for consultation?",
+            answer: "No, our consultation service is completely free. You only pay tuition fees when you decide to enroll in a course."
         },
         {
             icon: <Clock className={`w-5 h-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-500'}`} />,
             image: "/images/courses/adv2.png",
-            question: "Mất bao lâu để nhận được phản hồi sau khi đăng ký tư vấn?",
-            answer: "Đội ngũ tư vấn viên của chúng tôi sẽ liên hệ với bạn trong vòng 24 giờ kể từ khi nhận được yêu cầu tư vấn."
+            question: "How long does it take to receive a response after registration?",
+            answer: "Our team of consultants will contact you within 24 hours of receiving your consultation request."
         },
         {
             icon: <Pencil className={`w-5 h-5 ${isDarkMode ? 'text-amber-400' : 'text-amber-500'}`} />,
             image: "/images/courses/adv3.png",
-            question: "Tôi có thể thay đổi thông tin sau khi đã đăng ký tư vấn không?",
-            answer: "Có, bạn có thể liên hệ với chúng tôi qua email hoặc hotline để cập nhật thông tin sau khi đã đăng ký."
+            question: "Can I change my information after registering for consultation?",
+            answer: "Yes, you can contact us via email or hotline to update your information after registration."
         },
         {
             icon: <Lightbulb className={`w-5 h-5 ${isDarkMode ? 'text-rose-400' : 'text-rose-500'}`} />,
             image: "/images/courses/adv4.png",
-            question: "Tôi chưa biết nên học khóa học nào, trung tâm có thể giúp tôi không?",
-            answer: "Đó chính là mục tiêu của dịch vụ tư vấn! Chúng tôi sẽ đánh giá trình độ, tìm hiểu mục tiêu của bạn và đề xuất lộ trình học tập phù hợp nhất."
+            question: "I'm not sure which course to take, can you help me?",
+            answer: "That's the purpose of our consulting service! We'll assess your level, understand your goals, and recommend the most suitable learning path."
         }
     ];
 
-    // Enhanced gradient backgrounds
+    // Gradient styles
     const gradientBg = isDarkMode
         ? 'bg-gradient-to-br from-gray-900 to-gray-800'
         : 'bg-gradient-to-br from-gray-50 to-white';
@@ -128,10 +130,39 @@ export default function AdvisePage() {
         ? 'bg-gradient-to-br from-gray-800 to-gray-700'
         : 'bg-gradient-to-br from-white to-gray-50';
 
+    // Guide steps data
+    const guideSteps = [
+        {
+            title: "Fill in personal information",
+            description: "Provide your name, email, and phone number so we can contact you.",
+            icon: "👤",
+            bgColor: isDarkMode ? 'bg-indigo-900/40' : 'bg-indigo-100'
+        },
+        {
+            title: "Select your location",
+            description: "Choose your city, district, and ward where you currently live.",
+            icon: "📍",
+            bgColor: isDarkMode ? 'bg-emerald-900/40' : 'bg-emerald-100'
+        },
+        {
+            title: "State your requirements",
+            description: "Describe your learning goals, current level, and available time for courses.",
+            icon: "📝",
+            bgColor: isDarkMode ? 'bg-amber-900/40' : 'bg-amber-100'
+        },
+        {
+            title: "Submit your request",
+            description: "Confirm your information and submit the consultation request. We'll contact you within 24 hours.",
+            icon: "✉️",
+            bgColor: isDarkMode ? 'bg-rose-900/40' : 'bg-rose-100'
+        }
+    ];
+
+    // Render component
     return (
         <div className={`min-h-screen ${gradientBg}`}>
             <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-                {/* Header - Improved responsive text sizes */}
+                {/* Header Section */}
                 <motion.div
                     ref={headerRef}
                     initial="hidden"
@@ -140,15 +171,15 @@ export default function AdvisePage() {
                     className="text-center mb-10 sm:mb-16"
                 >
                     <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'} tracking-tight`}>
-                        Tư vấn lộ trình học <span className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}>Tiếng Anh</span>
+                        English Learning Path <span className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}>Consultation</span>
                     </h1>
                     <p className={`text-base sm:text-lg md:text-xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} max-w-3xl mx-auto leading-relaxed px-2`}>
-                        Đội ngũ chuyên gia của chúng tôi sẽ giúp bạn chọn lộ trình học phù hợp nhất
-                        với mục tiêu và khả năng của bạn.
+                        Our team of experts will help you choose the most suitable learning path
+                        based on your goals and abilities.
                     </p>
                 </motion.div>
 
-                {/* Form and Guide Section - Improved responsive layout */}
+                {/* Form and Guide Section */}
                 <div
                     ref={formSectionRef}
                     className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8 mb-10 sm:mb-16"
@@ -163,32 +194,7 @@ export default function AdvisePage() {
                         <div className={`rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden ${cardGradient} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                             <div className="p-4 sm:p-6 md:p-8">
                                 <motion.ul variants={staggerContainerLeft} className="space-y-4 sm:space-y-6 lg:space-y-8">
-                                    {[
-                                        {
-                                            title: "Điền thông tin cá nhân",
-                                            description: "Cung cấp họ tên, email và số điện thoại để chúng tôi có thể liên hệ với bạn.",
-                                            icon: "👤",
-                                            bgColor: isDarkMode ? 'bg-indigo-900/40' : 'bg-indigo-100'
-                                        },
-                                        {
-                                            title: "Chọn địa chỉ",
-                                            description: "Chọn tỉnh/thành phố, quận/huyện và phường/xã nơi bạn đang sinh sống.",
-                                            icon: "📍",
-                                            bgColor: isDarkMode ? 'bg-emerald-900/40' : 'bg-emerald-100'
-                                        },
-                                        {
-                                            title: "Nêu yêu cầu",
-                                            description: "Mô tả mục tiêu học tập, trình độ hiện tại và thời gian có thể tham gia khóa học.",
-                                            icon: "📝",
-                                            bgColor: isDarkMode ? 'bg-amber-900/40' : 'bg-amber-100'
-                                        },
-                                        {
-                                            title: "Gửi yêu cầu",
-                                            description: "Xác nhận thông tin và gửi yêu cầu tư vấn. Chúng tôi sẽ liên hệ trong vòng 24 giờ.",
-                                            icon: "✉️",
-                                            bgColor: isDarkMode ? 'bg-rose-900/40' : 'bg-rose-100'
-                                        }
-                                    ].map((step, index) => (
+                                    {guideSteps.map((step, index) => (
                                         <motion.li
                                             key={index}
                                             variants={fadeInLeft}
@@ -225,7 +231,7 @@ export default function AdvisePage() {
                     </motion.div>
                 </div>
 
-                {/* FAQ Section - Improved responsive grid */}
+                {/* FAQ Section */}
                 <motion.div
                     ref={faqSectionRef}
                     initial="hidden"
@@ -241,7 +247,7 @@ export default function AdvisePage() {
                                     variants={index % 2 === 0 ? fadeInLeft : fadeInRight}
                                     className={`p-4 sm:p-5 md:p-6 rounded-lg sm:rounded-xl ${cardGradient} shadow-md sm:shadow-lg border ${isDarkMode ? 'border-gray-700/50' : 'border-gray-100'} transition-all hover:shadow-xl hover:scale-[1.01] sm:hover:scale-[1.02] duration-300`}
                                 >
-                                    {/* Mobile layout - improved spacing */}
+                                    {/* Mobile layout */}
                                     <div className="block sm:hidden">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className={`flex-shrink-0 w-14 h-14 rounded-full overflow-hidden border-2 ${isDarkMode ? 'border-gray-600' : 'border-gray-200'} shadow-md`}>
@@ -267,7 +273,7 @@ export default function AdvisePage() {
                                         </p>
                                     </div>
 
-                                    {/* Desktop layout - improved spacing and alignment */}
+                                    {/* Desktop layout */}
                                     <div className="hidden sm:flex items-start gap-4 md:gap-5">
                                         <div className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 ${isDarkMode ? 'border-gray-600' : 'border-gray-200'} shadow-md`}>
                                             <Image
@@ -296,7 +302,7 @@ export default function AdvisePage() {
                     </div>
                 </motion.div>
 
-                {/* CTA Section - Improved responsive button */}
+                {/* CTA Section */}
                 <motion.div
                     ref={ctaSectionRef}
                     initial="hidden"
@@ -305,17 +311,17 @@ export default function AdvisePage() {
                     className="text-center pt-4 sm:pt-6 md:pt-8"
                 >
                     <p className={`mb-4 sm:mb-6 text-base sm:text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Bạn đã sẵn sàng để bắt đầu hành trình học tiếng Anh cùng chúng tôi?
+                        Are you ready to start your English learning journey with us?
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                         <Link href="/course/course-page" legacyBehavior>
                             <a
                                 className={`py-3 sm:py-4 px-6 sm:px-8 rounded-lg font-medium transition duration-300 transform hover:scale-102 sm:hover:scale-105 shadow-md sm:shadow-lg ${isDarkMode
-                                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white'
-                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white'
+                                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white'
+                                        : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white'
                                     }`}
                             >
-                                Xem Khóa Học Của Chúng Tôi
+                                View Our Courses
                             </a>
                         </Link>
                     </div>

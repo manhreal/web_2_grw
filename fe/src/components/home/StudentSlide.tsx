@@ -14,6 +14,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import 'swiper/css/effect-coverflow';
 
+// Type definitions
 interface Student {
     _id: string;
     image: string;
@@ -24,28 +25,25 @@ interface Student {
 }
 
 const StudentSlide: React.FC = () => {
+    // Hooks and state declarations
     const { isDarkMode } = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [activeIndex, setActiveIndex] = useState(0);
-    const [windowWidth, setWindowWidth] = useState(0);
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
     const swiperRef = useRef(null);
 
+    // Window resize handler
     useEffect(() => {
-        // Set window width on client-side only
-        if (typeof window !== 'undefined') {
-            setWindowWidth(window.innerWidth);
+        if (typeof window === 'undefined') return;
 
-            const handleResize = () => {
-                setWindowWidth(window.innerWidth);
-            };
-
-            window.addEventListener('resize', handleResize);
-            return () => window.removeEventListener('resize', handleResize);
-        }
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Data fetching
     useEffect(() => {
         const fetchStudents = async () => {
             try {
@@ -54,10 +52,10 @@ const StudentSlide: React.FC = () => {
                 if (response.success) {
                     setStudents(response.data);
                 } else {
-                    setError('Không thể tải dữ liệu học viên');
+                    setError('Unable to load student data');
                 }
             } catch (err) {
-                setError('Đã xảy ra lỗi khi tải dữ liệu');
+                setError('An error occurred while loading data');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -67,7 +65,7 @@ const StudentSlide: React.FC = () => {
         fetchStudents();
     }, []);
 
-    // Hàm xử lý URL ảnh
+    // Helper functions
     const getImageUrl = (imagePath: string): string => {
         if (imagePath.startsWith('http')) {
             return imagePath;
@@ -76,14 +74,15 @@ const StudentSlide: React.FC = () => {
         return `${SERVER_URL}/${decodedPath.replace(/^\//, '')}`;
     };
 
-    // Xử lý khi slide thay đổi
     const handleSlideChange = (swiper) => {
         setActiveIndex(swiper.realIndex);
     };
 
+    // Responsive layout variables
     const isMobile = windowWidth < 640;
     const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
+    // Loading state render
     if (loading) {
         return (
             <div className={`flex justify-center items-center h-64 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
@@ -92,13 +91,16 @@ const StudentSlide: React.FC = () => {
         );
     }
 
+    // Error state render
     if (error) {
         return <div className={`text-red-500 text-center py-10 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>{error}</div>;
     }
 
+    // Main component render
     return (
-        <div className={` px-2 md:px-4 transition-colors duration-300 ${isDarkMode ? ' text-gray-100' : ' text-gray-800'}`}>
+        <div className={`px-2 md:px-4 transition-colors duration-300 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
             <div className="container mx-auto px-2 md:px-10">
+                {/* Section header */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -106,10 +108,11 @@ const StudentSlide: React.FC = () => {
                     className="text-center"
                 >
                     <h2 className={`text-2xl md:text-3xl lg:text-4xl py-2 font-bold mb-3 ${isDarkMode ? 'text-rose-500' : 'text-rose-600'}`}>
-                        NIỀM TỰ HÀO CỦA UNI CENTER
+                        UNI CENTER PRIDE
                     </h2>
                 </motion.div>
 
+                {/* Swiper carousel */}
                 <div className="relative">
                     <Swiper
                         effect={'coverflow'}
@@ -120,7 +123,7 @@ const StudentSlide: React.FC = () => {
                         slidesPerView={isMobile ? 1 : (isTablet ? 2 : 3)}
                         coverflowEffect={{
                             rotate: isMobile ? 0 : 50,
-                            stretch: isMobile ? 0 : 0,
+                            stretch: 0,
                             depth: isMobile ? 100 : 500,
                             modifier: 1,
                             slideShadows: false,
@@ -173,13 +176,14 @@ const StudentSlide: React.FC = () => {
                             }
                         }}
                     >
+                        {/* Student slides */}
                         {students.map((student, index) => (
                             <SwiperSlide key={student._id}>
                                 <motion.div
                                     whileHover={{ y: -5, transition: { duration: 0.3 } }}
                                     className="flex flex-col items-center mx-auto"
                                 >
-                                    {/* Tên và mô tả với hiệu ứng dựa trên activeIndex */}
+                                    {/* Student name and description */}
                                     <motion.div
                                         initial={false}
                                         animate={{
@@ -190,18 +194,18 @@ const StudentSlide: React.FC = () => {
                                         className="w-full text-center mb-3"
                                     >
                                         <h3 className={`text-xl md:text-2xl pt-2 font-bold ${isDarkMode
-                                            ? 'text-red-400 bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-orange-300'
-                                            : 'text-red-600 bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-orange-600'
+                                                ? 'text-red-400 bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-orange-300'
+                                                : 'text-red-600 bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-orange-600'
                                             } mb-2`}>
                                             {student.name.toUpperCase()}
                                         </h3>
                                         <div className={`w-16 md:w-20 h-1 ${isDarkMode
-                                            ? 'bg-gradient-to-r from-red-400 to-orange-300'
-                                            : 'bg-gradient-to-r from-red-600 to-orange-600'
+                                                ? 'bg-gradient-to-r from-red-400 to-orange-300'
+                                                : 'bg-gradient-to-r from-red-600 to-orange-600'
                                             } mx-auto`}></div>
                                     </motion.div>
 
-                                    {/* Khung ảnh */}
+                                    {/* Image container */}
                                     <div className={`relative rounded-t-lg overflow-hidden ${isDarkMode ? 'shadow-lg shadow-blue-900/20' : 'shadow-xl'}`}>
                                         <div className="relative h-60 md:h-72 lg:h-80 w-64 md:w-80 lg:w-96">
                                             <Image
@@ -211,17 +215,15 @@ const StudentSlide: React.FC = () => {
                                                 style={{ objectFit: 'fill' }}
                                                 className="transition-transform duration-500"
                                                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                                priority={false}
+                                                priority={index < 2}
                                                 placeholder="blur"
                                                 blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjMyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyI+TG9hZGluZy4uLjwvdGV4dD48L3N2Zz4="
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Badge cho achievement - Thích ứng với dark/light mode */}
-                                    <div className={`w-64 md:w-80 lg:w-96 py-2 px-2 md:px-4 text-center rounded-b-sm shadow-md flex items-center justify-center transition-colors ${isDarkMode
-                                        ? 'bg-yellow-500'
-                                        : 'bg-yellow-400'
+                                    {/* Achievement badge */}
+                                    <div className={`w-64 md:w-80 lg:w-96 py-2 px-2 md:px-4 text-center rounded-b-sm shadow-md flex items-center justify-center transition-colors ${isDarkMode ? 'bg-yellow-500' : 'bg-yellow-400'
                                         }`}>
                                         <span className={`font-semibold text-xl md:text-2xl lg:text-3xl flex items-center gap-2 ${isDarkMode ? 'text-rose-600' : 'text-rose-600'}`}>
                                             <Crown className="w-5 h-5 md:w-6 md:h-6" />
@@ -229,7 +231,7 @@ const StudentSlide: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    {/* Mô tả với hiệu ứng */}
+                                    {/* Student description */}
                                     <motion.div
                                         initial={false}
                                         animate={{
@@ -240,7 +242,7 @@ const StudentSlide: React.FC = () => {
                                         className="w-full text-center mt-4"
                                     >
                                         <p className={`flex gap-2 text-base md:text-lg pb-2 max-w-60 mx-auto ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                                            <Megaphone className='text-red-500 w-4 h-4 md:w-5 md:h-5' />  {student.description}
+                                            <Megaphone className='text-red-500 w-4 h-4 md:w-5 md:h-5' /> {student.description}
                                         </p>
                                     </motion.div>
                                 </motion.div>
@@ -250,6 +252,7 @@ const StudentSlide: React.FC = () => {
                 </div>
             </div>
 
+            {/* CSS Styles */}
             <style jsx global>{`
                 .text-gradient-dark {
                     background: linear-gradient(to right, #60a5fa, #a78bfa);
@@ -264,7 +267,7 @@ const StudentSlide: React.FC = () => {
                 }
                 
                 .student-swiper {
-                    padding: 40px 0 60px; /* Thêm padding bottom để đủ chỗ cho pagination */
+                    padding: 40px 0 60px; /* Add bottom padding for pagination */
                     overflow: visible !important;
                 }
                 
@@ -326,14 +329,14 @@ const StudentSlide: React.FC = () => {
                     transform: scale(1.1);
                 }
                 
-                /* Hiệu ứng đặc biệt cho dark mode */
+                /* Special effects for dark mode */
                 ${isDarkMode ? `
                 .student-swiper .swiper-slide-active {
                     box-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
                 }
                 ` : ''}
                 
-                /* Style cho mobile */
+                /* Mobile styles */
                 @media (max-width: 640px) {
                     .student-swiper {
                         padding-bottom: 50px;

@@ -56,3 +56,5 @@ build/
 # Bỏ qua thư mục log và cache
 logs/
 .cache/
+
+serviceAccountKey.json

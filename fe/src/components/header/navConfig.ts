@@ -7,10 +7,10 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-    { name: 'Trang chủ', path: '/' },
-    { name: 'Khóa học', path: '/course/course-page' },
-    { name: 'Test miễn phí', path: '/free-test' },
-    { name: 'Tư vấn', path: '/advise' },
+    { name: 'Home', path: '/' },
+    { name: 'Course', path: '/course/course-page' },
+    { name: 'Free Test', path: '/free-test' },
+    { name: 'Advising', path: '/advise' },
 
 ] as const;
 

@@ -10,7 +10,7 @@ export const showSuccessToast = ({ message, type = 'success' }: SuccessToastProp
     Swal.fire({
         position: 'top-end',
         icon: type,
-        title: type === 'success' ? 'Thành công' : 'Lỗi',
+        title: type === 'success' ? 'Success' : 'Error',
         text: message,
         showConfirmButton: false,
         timer: 1500,
