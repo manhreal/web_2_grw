@@ -69,10 +69,8 @@ export const updateTeacher = async (req, res) => {
             // If the request includes a new image path, update the image
             await updateModelImage(Teacher, req.params.id, req.body.image);
         }
-
         // Remove oldImage from the data to prevent it from being saved
         const { oldImage, ...updateData } = req.body;
-
         const teacher = await Teacher.findByIdAndUpdate(
             req.params.id,
             updateData,
@@ -105,19 +103,16 @@ export const updateTeacher = async (req, res) => {
 export const deleteTeacher = async (req, res) => {
     try {
         const teacher = await Teacher.findById(req.params.id);
-
         if (!teacher) {
             return res.status(404).json({
                 success: false,
                 message: `Cannot find teacher with ID: ${req.params.id}`
             });
         }
-
         // Delete associated image if exists
         if (teacher.image) {
             deleteFile(teacher.image);
         }
-
         // Delete the teacher
         await Teacher.findByIdAndDelete(req.params.id);
 
@@ -133,3 +128,4 @@ export const deleteTeacher = async (req, res) => {
         });
     }
 };
+

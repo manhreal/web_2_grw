@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
+
 import cors from "cors";
+
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import admin from "./firebaseAdmin.js";
@@ -25,7 +27,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
 const PORT = process.env.PORT;
+
 const RECAPTCHA = process.env.RECAPTCHA_SECRET_KEY;
 
 const loginRateLimiter = rateLimit({
@@ -41,12 +45,13 @@ const loginRateLimiter = rateLimit({
 
 app.use(cors({
     credentials: true,
-    origin: ['http://localhost:3000', 'https://realvn.top', 'http://realvn.top'],
+    origin: ['http://localhost:3000', 'https://unienglishcenter.edu.vn'],
 }));
 
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
 // MongoDB connection
 mongoose
     .connect(process.env.ATLAS_URI)
@@ -56,7 +61,6 @@ mongoose
 // reCAPTCHA middleware
 const verifyRecaptchaToken = async (token) => {
     if (!token) return false;
-
     try {
         const response = await axios.post(
             'https://www.google.com/recaptcha/api/siteverify',
@@ -68,7 +72,6 @@ const verifyRecaptchaToken = async (token) => {
                 }
             }
         );
-
         return response.data.success;
     } catch (error) {
         console.error('Error while verify ReCaptcha', error);

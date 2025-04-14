@@ -10,6 +10,7 @@ import NewsSlide from '@/components/home/NewsSlide';
 import PartnerShowcase from '@/components/home/PartnerShowcase';
 import BannerSlide from '@/components/home/BannerSlide';
 import Review from '@/components/home/Review';
+
 import ScrollToSectionButton from '@/components/navigation/ScrollToSectionButton';
 
 export default function Home() {

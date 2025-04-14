@@ -18,10 +18,10 @@ export default function UnauthorizedPage() {
             >
                 <AlertCircle className={`h-16 w-16 mx-auto mb-6 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
 
-                <h1 className="text-2xl font-bold mb-4">Quyền truy cập bị từ chối</h1>
+                <h1 className="text-2xl font-bold mb-4">Access denied</h1>
 
                 <p className={`mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Bạn không có quyền truy cập vào trang này. Chỉ người dùng có quyền quản trị viên mới có thể truy cập trang này.
+                    You do not have permission to access this page. Only users with administrator rights can access this page.
                 </p>
 
                 <Link
@@ -32,7 +32,7 @@ export default function UnauthorizedPage() {
                         }`}
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Quay về trang chủ
+                    Back to home page
                 </Link>
             </motion.div>
         </div>

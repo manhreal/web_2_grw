@@ -12,7 +12,6 @@ export const verifyToken = async (req, res, next) => {
         req.user = decodedToken; 
         next();
     } catch (error) {
-        console.error("Token verification error:", error);
         res.status(403).json({ error: "Unauthorized: Invalid token" });
     }
 };
@@ -21,26 +20,21 @@ export const verifyToken = async (req, res, next) => {
 export const verifyAdmin = async (req, res, next) => {
     try {
         const token = req.cookies.token;
-
         console.log("Token:", token);
         if (!token) {
             return res.status(401).json({ error: "Missing token" });
         }
-
         try {
             const decodedToken = await admin.auth().verifyIdToken(token);
             const { uid } = decodedToken;
             const user = await User.findOne({ uid });
-
             if (!user) {
                 return res.status(404).json({ error: "Cannnot find user" });;
             }
-
             if (user.role !== "admin") {
                 return res.status(403).json({ error: "Forbidden: User is not an admin" });
             }
             req.user = user;
-
             next();
         } catch (error) {
             console.error("Error verify token:", error);

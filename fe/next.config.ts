@@ -59,18 +59,6 @@ export default {
       }
     ],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/uploads/:path*',
-        destination: 'http://api.realvn.top:5999/uploads/:path*'
-      },
-      {
-        source: '/local-uploads/:path*',
-        destination: 'http://localhost:5999/uploads/:path*'
-      }
-    ]
-  },
   reactStrictMode: true,
   output: 'export'
 }

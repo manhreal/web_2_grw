@@ -64,7 +64,7 @@ export const UserSection: React.FC<UserSectionProps> = ({
                         const root = createRoot(recaptchaContainer);
                         root.render(
                             <ReCAPTCHA
-                                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "your-recaptcha-site-key"}
+                                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                                 onChange={(token) => {
                                     setCaptchaToken(token);
                                     Swal.close();

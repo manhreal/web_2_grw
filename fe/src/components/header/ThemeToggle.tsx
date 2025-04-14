@@ -25,7 +25,8 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ isMobile = false }) =>
                         </div>
 
                         {/* Day icon (small decorative sun) */}
-                        <div className={`absolute top-0 right-0 flex items-center justify-center w-6 h-6 transition-opacity duration-300 ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}>
+                        <div className={`absolute top-0 right-0 flex items-center justify-center w-6 h-6 
+                            transition-opacity duration-300 ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}>
                             <div className="relative">
                                 <div className="w-3 h-3 rounded-full bg-yellow-300"></div>
                                 <div className="absolute left-4 top-1 w-2 h-2 rounded-full bg-white"></div>
@@ -33,7 +34,8 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ isMobile = false }) =>
                         </div>
 
                         {/* Night icon (small decorative moon) */}
-                        <div className={`absolute top-0 left-0 flex items-center justify-center w-6 h-6 transition-opacity duration-300 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}>
+                        <div className={`absolute top-0 left-0 flex items-center justify-center w-6 h-6 
+                            transition-opacity duration-300 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}>
                             <div className="w-3 h-3 rounded-full bg-yellow-200 transform translate-x-1"></div>
                             <div className="absolute top-1 left-3 w-1 h-1 rounded-full bg-white"></div>
                             <div className="absolute top-3 left-2 w-1 h-1 rounded-full bg-white"></div>

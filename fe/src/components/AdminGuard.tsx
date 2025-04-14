@@ -26,8 +26,9 @@ export default function AdminGuard({ children }: AdminGuardProps) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="mt-4">Đang kiểm tra quyền truy cập...</p>
+                    <div className="animate-spin rounded-full h-10 w-10 
+                    border-t-2 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="mt-4">Checking admin...</p>
                 </div>
             </div>
         );

@@ -27,7 +27,6 @@ export const cacheMiddleware = (keyFn, ttl = 20 * 60 * 1000) => {
                 data: dataObject,
                 timestamp: Date.now()
             });
-
             console.log(`[CACHE SET] - Key: ${key}`);
             return res.status(200).json({
                 success: true,
@@ -35,7 +34,6 @@ export const cacheMiddleware = (keyFn, ttl = 20 * 60 * 1000) => {
                 cached: false
             });
         };
-
         next();
     };
 };

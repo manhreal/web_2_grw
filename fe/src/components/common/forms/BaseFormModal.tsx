@@ -73,7 +73,7 @@ export const openFormModal = async ({
                             id="${field.id}-button"
                             class="px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
                         >
-                            Chọn ảnh
+                            Select Image
                         </button>
                         <div id="${field.id}-preview" class="flex-1">
                             ${field.defaultValue ? `
@@ -83,7 +83,7 @@ export const openFormModal = async ({
                                     class="object-cover rounded-md border border-gray-200 w-full h-full"
                                     onerror="this.onerror=null;this.src='/default-image.png';"
                                 />
-                            ` : '<span class="text-gray-400 text-sm">Chưa có ảnh</span>'}
+                            ` : '<span class="text-gray-400 text-sm">Missing image</span>'}
                         </div>
                     </div>
                 ` : `
@@ -103,8 +103,8 @@ export const openFormModal = async ({
         focusConfirm: false,
         showCancelButton: true,
         showConfirmButton: true,
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Hủy bỏ',
+        confirmButtonText: 'Confirm',
+        cancelButtonText: 'Cancel',
         showClass: {
             popup: 'animate__animated animate__fadeIn animate__faster'
         },
@@ -173,7 +173,7 @@ export const openFormModal = async ({
                         const img = preview.querySelector('img');
 
                         if (field.required && !img?.src) {
-                            Swal.showValidationMessage(`Vui lòng upload ${field.label}`);
+                            Swal.showValidationMessage(`Please upload ${field.label}`);
                             isValid = false;
                             break;
                         }
@@ -209,7 +209,7 @@ export const openFormModal = async ({
                         const element = document.getElementById(field.id) as HTMLInputElement | HTMLTextAreaElement;
 
                         if (field.required && !element?.value) {
-                            Swal.showValidationMessage(`Vui lòng nhập ${field.label}`);
+                            Swal.showValidationMessage(`Please enter: ${field.label}`);
                             isValid = false;
                             break;
                         }

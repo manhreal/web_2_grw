@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { getCourses } from '@/api/home-show/view';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SERVER_URL } from '@/api/server_url';
+
 import { useTheme } from '@/context/ThemeContext';
+
 import { BookOpen, Award, Users, ChevronRight, X } from 'lucide-react';
 
 // Type declarations
@@ -23,7 +25,9 @@ interface CourseGroup {
 
 const ModernCourseSection: React.FC = () => {
     // State declarations
+    
     const { isDarkMode } = useTheme();
+
     const [, setAllCourses] = useState<Course[]>([]);
     const [courseGroups, setCourseGroups] = useState<CourseGroup[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
